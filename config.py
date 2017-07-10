@@ -1,6 +1,7 @@
 LOCAL_PATH_RAW='../raw';
 LOCAL_PATH_FEA='../data/features';
-LOCAL_PATH_HDF='../data/hdf';
+LOCAL_PATH_DF='../data/df';
+
 
 DATA_NAMES=[
     {
@@ -37,4 +38,4 @@ BLACK_LIST=[
 CONN_STR='mongodb://0.0.0.0:27017';
 DB_STR='quant_offline';
 
-import dataio_hdf as dataio;
+import dataio_df as dataio;

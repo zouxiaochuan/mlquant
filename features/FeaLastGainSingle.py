@@ -3,6 +3,7 @@ from BaseFeaSingleStock import BaseFeaSingleStock;
 from config import dataio;
 import utils_common;
 import pandas as pd;
+import numpy as np;
 
 class FeaLastGainSingle(BaseFeaSingleStock):
     def __init__(self):
@@ -19,6 +20,7 @@ class FeaLastGainSingle(BaseFeaSingleStock):
             indices = [];
             
             for i,rec in enumerate(recs):
+                
                 secID = rec['secID'];
                 tradeDate = rec['tradeDate'];
 

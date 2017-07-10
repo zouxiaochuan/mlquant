@@ -36,7 +36,7 @@ def runExtract(path, name=None):
         runExtractInternal((path,name));
     pass;
 
-def write_hdf(path,df):
+def write_df(path,df):
     utils_common.system('rm -rf {0}'.format(path));
-    df.to_hdf(path,'data',data_columns=True,format='table',complib='blosc');
+    df.to_hdf(path,'data');
 
