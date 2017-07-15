@@ -5,9 +5,9 @@ import bson.json_util
 if __name__=='__main__':
     dataio.initdb();
 
-    for dataname in config.DATA_NAMES:
-        print(dataname['name']);
-        dataio.importdb(dataname);
+    for dataname,keys in config.DATA_NAMES.items():
+        print(dataname);
+        dataio.importdb(dataname,keys);
         pass;
     pass;
 

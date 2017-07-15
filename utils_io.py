@@ -18,7 +18,7 @@ def runExtractInternal(param):
 
     ext = constructor();
     df = ext.extract();
-    print(df.head(10));
+    #print(df.head(10));
     savename = name;
     config.dataio.save_df(df,savename);
     
@@ -37,6 +37,7 @@ def runExtract(path, name=None):
     pass;
 
 def write_df(path,df):
-    utils_common.system('rm -rf {0}'.format(path));
-    df.to_hdf(path,'data');
+    #utils_common.system('rm -rf {0}'.format(path));
+    #df.to_hdf(path,'data');
+    df.to_csv(path,float_format='%g');
 

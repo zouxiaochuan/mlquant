@@ -3,32 +3,14 @@ LOCAL_PATH_FEA='../data/features';
 LOCAL_PATH_DF='../data/df';
 
 
-DATA_NAMES=[
-    {
-        'name':'MktEqudGet',
-        'key': ['secID','tradeDate']
-    },
-    {
-        'name':'MktEquFlowGet',
-        'key': ['secID','tradeDate']
-    },
-    {
-        'name':'MktIdxdGet',
-        'key': ['indexID','tradeDate']
-    },
-    {
-        'name':'SecSTGet',
-        'key': ['secID','tradeDate']
-    },
-    {
-        'name':'MktEquFlowOrderGet',
-        'key': ['secID','tradeDate']
-    },
-    {
-        'name':'MktEqudAdjAfGet',
-        'key': ['secID','tradeDate']
-    }
-];
+DATA_NAMES={
+    'MktEqudGet': ['secID','tradeDate'],
+    'MktEquFlowGet': ['secID','tradeDate'],
+    'MktIdxdGet': ['indexID','tradeDate'],
+    'SecSTGet': ['secID','tradeDate'],
+    'MktEquFlowOrderGet': ['secID','tradeDate'],
+    'MktEqudAdjAfGet': ['secID','tradeDate']
+};
 
 BLACK_LIST=[
     '000033.XSHE'
@@ -38,4 +20,9 @@ BLACK_LIST=[
 CONN_STR='mongodb://0.0.0.0:27017';
 DB_STR='quant_offline';
 
-import dataio_df as dataio;
+import dataio_csv as dataio;
+
+FEATURE_SELECT = [
+];
+
+TRAINING_DAYS = 5*365;

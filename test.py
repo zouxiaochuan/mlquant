@@ -10,8 +10,8 @@ if __name__=='__main__':
     #df.to_hdf('x.hdf','x');
     #df = pd.read_hdf('x.hdf','x');
     #df.to_hdf('x2.hdf');
-    s = pd.HDFStore('x.hdf');
-    print(s.keys());
-    print(time.time()-s);
 
+    import BaseLabelEveryNDayTrade;
+    x = BaseLabelEveryNDayTrade.BaseLabelEveryNDayTrade(10);
+    x.extract();
 

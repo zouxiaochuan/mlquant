@@ -1,11 +1,10 @@
 
-from BaseFeaSingleStock import BaseFeaSingleStock;
 from config import dataio;
 import utils_common;
 import pandas as pd;
 import numpy as np;
 
-class FeaLastGainSingle(BaseFeaSingleStock):
+class FeaLastTurnoverValueGrad(object):
     def __init__(self):
         self.ndays_ = 10;
         pass;
@@ -14,9 +13,9 @@ class FeaLastGainSingle(BaseFeaSingleStock):
 
         
         def process(secID,recs):
-            val = [rec['closePrice'] for rec in recs];
+            val = [rec['turnoverValue'] for rec in recs];
             grad = utils_common.computeGrad(val);
-            fea = np.zeros((len(recs),self.ndays_));
+            fea = np.zeros((len(recs),self.ndays_),dtype=np.float32);
             indices = [];
             
             for i,rec in enumerate(recs):
@@ -29,6 +28,8 @@ class FeaLastGainSingle(BaseFeaSingleStock):
                 for ii in range(self.ndays_):
                     pos = i-ii;
                     if pos<=0:
+                        v = None;
+                    elif val[pos-1]==0:
                         v = None;
                     else:
                         v = grad[pos]/val[pos-1];
@@ -44,9 +45,15 @@ class FeaLastGainSingle(BaseFeaSingleStock):
                 columnNames.append(namePrefix+'_'+str(ii));
                 pass;
 
-            return pd.DataFrame(fea,index=indices,columns=columnNames);
+            df = pd.DataFrame(fea,
+                              index=pd.MultiIndex.from_tuples(indices,
+                                                              names=['secID','tradeDate']),
+                              columns=columnNames);
+            return df;
+
+        df = dataio.getdf('MktEqudAdjAfGet')[['turnoverValue']];
         
-        secResults = dataio.forEachSecID('MktEqudAdjAfGet',['closePrice'],process);
+        secResults = dataio.forEachSecID(df,process);
 
         return pd.concat(secResults);
         pass;
