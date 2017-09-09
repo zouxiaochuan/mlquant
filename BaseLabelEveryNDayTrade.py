@@ -32,7 +32,7 @@ class BaseLabelEveryNDayTrade(object):
             
             for i,rec in enumerate(recs):
                 #stock must be listed for 100 days
-                if i<=100:
+                if i<=300:
                     continue;
                 if i>=(n-self.nday_-1):
                     indices.append((rec['secID'],rec['tradeDate']));

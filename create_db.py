@@ -5,9 +5,16 @@ import bson.json_util
 if __name__=='__main__':
     dataio.initdb();
 
-    for dataname,keys in config.DATA_NAMES.items():
+    datanames = config.DATA_NAMES;
+    datanames = {'FundETFConsGet': ['secID','tradeDate','consID']};
+    for dataname,keys in datanames.items():
         print(dataname);
-        dataio.importdb(dataname,keys);
+        if dataname=='MktFunddAdjGet' or dataname=='FundETFConsGet':
+            flt = False;
+        else:
+            flt = True;
+            pass;
+        dataio.importdb(dataname,keys,filterSecID=flt);
         pass;
     pass;
 

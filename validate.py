@@ -8,29 +8,80 @@ import sklearn.calibration;
 import sklearn.preprocessing;
 import numpy as np;
 import utils_common;
+import weight_generator;
 
 
 FEATURE_SELECT = [
     'FeaLastGainSingle_0',
     'FeaLastGainSingle_1',
     'FeaLastGainSingle_2',
+    'FeaLastGainSingle_3',
+    'FeaLastGainSingle_4',
     'FeaLastGainSum_5',
     'FeaLastGainSum_10',
+    'FeaLastGainSum_20',
     'FeaLastGainSum_50',
     'FeaLastOneDayRate_OpenClose_0',
-#    'FeaLastOneDayRate_High_0',
+    'FeaLastOneDayRate_OpenClose_1',
+    'FeaLastOneDayRate_High_0',
+    'FeaLastOneDayRate_High_1',
     'FeaLastOneDayRate_Low_0',
-    'FeaLastTurnoverValueGrad_0'
+    'FeaLastOneDayRate_Low_1',
+    'FeaLastTurnoverValueGrad_0',
+    'FeaLastTurnoverValueGrad_1',
+    'FeaLastTurnoverValueGrad_2',
+    'FeaLastTurnoverValueGrad_3',
+    'FeaHighLowRateSum_max_5',
+    'FeaHighLowRateSum_min_5'
+    #'FeaTalib_MA_5',
+    #'FeaTalib_MA_10',
+    #'FeaTalib_MA_20',
+    #'FeaTalib_DEMA_10',
+    #'FeaTalib_DEMA_20',
+    #'FeaTalib_EMA_10',
+    #'FeaTalib_EMA_20'
 ];
 
 LABEL = 'LabelEvery1DayTrade';
 
-YEARS = ['2014','2015','2016','2017','2018'];
+YEARS = [
+    #'2014'
+    '2015'
+    ,'2016'
+    ,'2017'
+    ,'2018'];
 
 FILT_UP = 0.02;
 FILT_DOWN = 0.01;
+WEIGHTER = weight_generator.Step();
+FEATURE_NUM = 80;
 
-def validate(labelTrain,labelTest,featureTrain,featureTest,dtTest):
+def validateReg(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
+    #cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=150);
+    cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.05,n_estimators=150);
+    #print(featureTrain.shape);
+    #print(featureTest.shape);
+    #print(labelTest);
+    print('training sample: {0}'.format(featureTrain.shape[0]));
+    cls.fit(featureTrain,labelTrain,
+            #sample_weight=weightTrain,
+            eval_set=[(featureTrain,labelTrain),
+                      (featureTest,labelTest)]
+            );
+
+    pred = np.squeeze(cls.predict(featureTest));
+    print('{0}:{1},{2},{3},{4},{5}'.format(year,
+                                           topNacc(dtTest,labelTest,pred,5),
+                                           topNexp(dtTest,labelTest,5),
+                                           topNacc(dtTest,labelTest,pred,10),
+                                           topNacc(dtTest,labelTest,pred,100),
+                                           'haha'
+    ));
+    
+    pass;
+
+
+def validate(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
     idxChoose = ((labelTrain<FILT_DOWN) | (labelTrain>=FILT_UP));
     labelTrain = labelTrain[idxChoose];
     featureTrain = featureTrain[idxChoose,:];
@@ -38,12 +89,15 @@ def validate(labelTrain,labelTest,featureTrain,featureTest,dtTest):
     labelBin = np.where(labelTrain>=FILT_UP,1,0);
     labelTestBin = np.where(labelTest>=FILT_UP,1,0);
 
-    cls = xgb.XGBClassifier(max_depth=2,learning_rate=0.3,n_estimators=150);
+    cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=150);
+    #cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.1,n_estimators=150);
     #print(featureTrain.shape);
     #print(featureTest.shape);
     #print(labelTest);
     print('training sample: {0}'.format(featureTrain.shape[0]));
-    cls.fit(featureTrain,labelBin,eval_metric='auc',
+    print(len(weightTrain));
+    weightTrain = weightTrain[idxChoose];
+    cls.fit(featureTrain,labelBin,eval_metric='auc',sample_weight=weightTrain,
             eval_set=[(featureTrain,labelBin),
                       (featureTest,labelTestBin)]
             );
@@ -85,10 +139,41 @@ def topNexp(dt,label,n):
 
     return np.mean(accs);
 
+def getFeatureNames(n=30):
+    names = [];
+    with open('feature_importance.txt') as fin:
+        for i,line in enumerate(fin):
+            if i>=n:
+                break;
+            fname = line.strip().split(',')[0];
+            names.append(fname);
+            pass;
+        pass
+    return names;
+            
+
+def getWeight(dt):
+    udt = sorted(np.unique(dt).tolist(),reverse=True);
+    uw = WEIGHTER.get(len(udt));
+    wdict = {udt[i]:uw[i] for i in range(len(udt))};
+
+    op = np.vectorize(lambda x:wdict[x]);
+    return op(dt);
+
+
 if __name__=='__main__':
     print('load data...');
+    #FEATURE_SELECT = getFeatureNames(FEATURE_NUM);
+    #FEATURE_SELECT = dataio.getAllFeatureNames();
+    print('feature length: ' + str(len(FEATURE_SELECT)));
+    
     df = dataio.getLabelAndFeature(LABEL,FEATURE_SELECT);
     df = df[df[LABEL]>-1];
+
+    print(df.shape[0]);
+    #df = dataio.joinHS300(df);
+    df = dataio.joinTurnoverRank(df);
+    print(df.shape[0]);
     
     print('prepare...');
     dt = df.index.get_level_values('tradeDate');
@@ -106,7 +191,10 @@ if __name__=='__main__':
         featureTrain = feature[idxTrain];
         featureTest = feature[idxTest];
         dtTest = dt[idxTest];
-        validate(labelTrain,labelTest,featureTrain,featureTest,dtTest);
+        dtTrain = dt[idxTrain];
+        weightTrain = getWeight(dtTrain);
+        
+        validate(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain);
         pass;
     
     pass;

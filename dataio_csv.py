@@ -16,12 +16,31 @@ def initdb():
 def getdb():
     return config.LOCAL_PATH_DF;
 
-def importdb(dataname,keys):
+def updatedb(dataname,keys,filterSecID=True):
+    dstpath = os.path.join(getdb(),dataname);
+    dfOrigin = pd.read_csv(dstpath,index_col=keys);
+    
+    path = os.path.join(config.LOCAL_PATH_RAW,dataname + '.csv');
+    dfAppend = pd.read_csv(path,index_col=keys);
+
+    if dfAppend.index.names[0]==u'secID' and filterSecID:
+        dfAppend = dfAppend[dfAppend.index.map(lambda i:utils_stock.filterSecID(i[0]))\
+                            .get_values()];
+        
+        pass;
+
+    df = dfOrigin.append(dfAppend);
+    df[~df.index.duplicated(keep='last')];
+    df.to_csv(dstpath);
+    
+    pass;
+
+def importdb(dataname,keys,filterSecID=True):
     dstpath = os.path.join(getdb(),dataname);
     path = os.path.join(config.LOCAL_PATH_RAW,dataname + '.csv');
     df = pd.read_csv(path,index_col=keys);
 
-    if df.index.names[0]==u'secID':
+    if df.index.names[0]==u'secID' and filterSecID:
         df = df[df.index.map(lambda i:utils_stock.filterSecID(i[0])).get_values()];
         pass;
 
@@ -29,6 +48,41 @@ def importdb(dataname,keys):
 
 def getdf(name):
     return pd.read_csv(os.path.join(getdb(),name),index_col=config.DATA_NAMES[name]);
+
+def getDecFactor(name):
+    return pd.read_csv(os.path.join(getdb(),name),index_col=['secID','tradeDate']);
+
+def completeFundETFConsGet():
+    df = getdf('FundETFConsGet');
+    dfMarket = getdf('MktEqudAdjAfGet');
+
+    udtMarket = np.unique(dfMarket.index.get_level_values('tradeDate').values);
+    dts = df.index.get_level_values('tradeDate').values;
+    udtFund = np.unique(dts);
+    minDt = np.min(dts);
+    missDt = {dt for dt in udtMarket if dt not in udtFund and dt>=minDt};
+
+    print(missDt);
+    completeDtMap = dict();
+    dfComp = df.copy();
+    for dt in missDt:
+        for i in range(20):
+            preDt = utils_common.dtAdd(dt,-i);
+            if preDt in udtFund:
+                break;
+            pass;
+        if preDt not in udtFund:
+            raise RuntimeError('cannot find previous date');
+        addDf = df[dts==preDt];
+        addDf.reset_index(inplace=True);
+        addDf.loc[:,'tradeDate'] = dt;
+        addDf.set_index(['secID','tradeDate'],inplace=True);
+
+        dfComp = dfComp.append(addDf);
+        pass;
+
+    dfComp.to_csv(os.path.join(getdb(),'FundETFConsGet'));
+    pass;
 
 def forEachSecID(df,func):
     df.sort_index(inplace=True);
@@ -59,12 +113,15 @@ def forEachSecID(df,func):
 
     return ret;
 
+def forEachTradeDate(df):
+    df.groupby('tradeDate');
+    pass;
 def save_df(df,name):
     dstpath = os.path.join(getdb(),name);
     df.to_csv(dstpath,float_format='%g');
     pass;
 
-def getFeatureInternal(names):
+def getFeature(names):
     filenameMap = scanColumnName('Fea*',names);
 
     dfs = [];
@@ -83,7 +140,7 @@ def getLabel(name):
                        usecols=(['secID','tradeDate']+column));
 
 def getLabelAndFeature(labelName,featureNames):
-    features = getFeatureInternal(featureNames);
+    features = getFeature(featureNames);
     label = getLabel(labelName);
 
     return label.join(features,how='left');
@@ -106,6 +163,39 @@ def scanColumnName(pattern,columns):
         pass;
 
     return results;
+
+def getAllFeatureNames():
+    names = set();
+    files = glob.glob(getdb() + '/Fea*' );
+    for f in files:
+        with open(f) as fin:
+            cols = fin.next().strip().split(',');
+            names.update(cols);
+            pass;
+        pass;
+    names.remove('secID');
+    names.remove('tradeDate');
+    return list(names);
+
+def joinHS300(df):
+    df300 = getdf('FundETFConsGet')[['quantity']];
+    df300 = df300[df300.index.get_level_values('secID')=='510300.XSHG'];
+    df300.reset_index(inplace=True);
+    df300.drop('secID', axis=1, inplace=True);
+    df300.rename(columns = {'consID':'secID'}, inplace=True);
+    df300.set_index(['secID','tradeDate'],inplace=True);
+
+    return df.join(df300,how='inner');
+
+def joinTurnoverRank(df,num=500):
+    dfRank = getFeature(['FeaLastTurnoverRank'])[0];
+    dfRank = dfRank[dfRank['FeaLastTurnoverRank']<=500];
+    df = df.join(dfRank,how='inner');
+    df.drop('FeaLastTurnoverRank',axis=1,inplace=True);
+    return df;
+    
+if __name__=='__main__':
+    print(getAllFeatureNames());
 
     
 

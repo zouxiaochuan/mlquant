@@ -4,6 +4,7 @@ import datetime;
 import pandas as pd;
 import numpy as np;
 from collections import defaultdict;
+from collections import deque;
 import glob;
 import importlib;
 import sys;
@@ -144,4 +145,147 @@ def bucketValue(val,blist):
 
     return len(buckets);
 
+def records2dict(recs):
+    names = {k.encode('utf8') for rec in recs for k in rec.dtype.names};
 
+    ret = dict();
+    for name in names:
+        ret[name] = list();
+        pass;
+
+    for rec in recs:
+        for name in names:
+            ret[name].append(rec[name]);
+            pass;
+        pass;
+
+    for name in names:
+        ret[name] = np.array(ret[name]);
+        pass;
+    return ret;
+
+def readCsvLocalPath(path):
+    filenames = os.listdir(path);
+    data = None;
+    for f in sorted(filenames):
+        fullpath = os.path.join(path,f);
+        print(fullpath);
+        df = pd.read_csv(fullpath);
+        if data is None:
+            data = df;
+        else:
+            data = data.append(df);
+            pass;
+        pass;
+    return data;
+
+def mergeCsvLocal(path,mergeName):
+    df = readCsvLocalPath(path);
+    df.to_csv(mergeName,index=False);
+    pass;
+
+def getWeight(dt,WEIGHTER):
+    udt = sorted(np.unique(dt).tolist(),reverse=True);
+    uw = WEIGHTER.get(len(udt));
+    wdict = {udt[i]:uw[i] for i in range(len(udt))};
+
+    op = np.vectorize(lambda x:wdict[x]);
+    return op(dt);
+
+def topNacc(dt,label,pred,n):
+    udt = sorted(np.unique(dt).tolist());
+
+    def process(idt):
+        idx = (dt==idt);
+        cl = label[idx];
+        cp = pred[idx];
+
+        acc = np.mean(cl[np.argsort(cp)[::-1][:n]]);
+        return acc;
+
+    accs = [process(idt) for idt in udt];
+
+    return np.mean(accs);
+
+def topNPosRate(dt,label,pred,n):
+    udt = sorted(np.unique(dt).tolist());
+
+    def process(idt):
+        idx = (dt==idt);
+        cl = label[idx];
+        cp = pred[idx];
+
+        acc = np.mean(cl[np.argsort(cp)[::-1][:n]]);
+        return 1 if acc>=0 else 0;
+
+    accs = [process(idt) for idt in udt];
+
+    return np.mean(accs);
+
+
+def shiftDtPre(df):
+    udt = np.sort(np.unique(df.index.get_level_values('tradeDate').values));
+    dtMap = {udt[i]:udt[i-1] for i in range(1,udt.shape[0])};
+    minDt = np.min(udt);
+
+    df = df.reset_index();
+
+    arr = df.values;
+    idxDt = df.columns.get_loc('tradeDate');
+    
+    for i in range(df.shape[0]):
+        dt = arr[i,idxDt];
+        if dt==minDt:
+            arr[i,idxDt] = '0000-00-00'
+        else:
+            arr[i,idxDt] = dtMap[dt];
+            pass;
+        pass;
+
+    df = pd.DataFrame(arr,columns=df.columns);
+    df.set_index(['secID','tradeDate'],inplace=True);
+    return df;
+
+def shiftDtPost(df):
+    udt = np.sort(np.unique(df.index.get_level_values('tradeDate').values));
+    dtMap = {udt[i]:udt[i+1] for i in range(udt.shape[0]-1)};
+    maxDt = np.max(udt);
+
+    df = df.reset_index();
+
+    arr = df.values;
+    idxDt = df.columns.get_loc('tradeDate');
+    
+    for i in range(df.shape[0]):
+        dt = arr[i,idxDt];
+        if dt==maxDt:
+            arr[i,idxDt] = '9999-99-99'
+        else:
+            arr[i,idxDt] = dtMap[dt];
+            pass;
+        pass;
+
+    df = pd.DataFrame(arr,columns=df.columns);
+    df.set_index(['secID','tradeDate'],inplace=True);
+    return df;
+
+def slideWindowMaximum(values,windowSize):
+    q = deque();
+
+    ret = [];
+    for i in range(len(values)):
+        while len(q)>0 and values[i]>values[q[-1]]:
+            q.pop();
+            pass;
+        q.append(i);
+        if q[0]<=(i-windowSize):
+            q.popleft();
+            pass;
+        
+        ret.append(values[q[0]]);
+        pass;
+
+    return ret;
+
+if __name__=='__main__':
+    print(slideWindowMaximum([4,5,8,7,6,2,1,9],4));
