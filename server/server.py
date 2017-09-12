@@ -11,6 +11,12 @@ app=Flask(__name__);
 def getdb():
     return MongoClient('mongodb://xiaochuan:iphoipho0@localhost:27017/')['mlquant']['scores'];
 
+def getMaxTradeDate(db):
+    return db.aggregate([{ '$group' : { '_id': 'null', 'max': { '$max' : '$tradeDate' }}}]).next()['max'];
+
+def getScores(db,query):
+    return list(db.find(query).sort('score',pymongo.DESCENDING));
+
 @app.route('/uploadScore',methods=['POST'])
 def uploadScore():
     db = getdb();
@@ -27,11 +33,17 @@ def uploadScore():
     
     return json.dumps({'success':True});
 
-@app.route('/queryScore',methods=['POST'])
+@app.route('/queryScore',methods=['GET','POST'])
 def queryScore():
     db = getdb();
-    qstr = request.stream.read();
-    qres = list(db.find(json.loads(qstr)));
+    if request.method=='GET':
+        query = {'tradeDate':getMaxTradeDate(db)};
+        pass;
+    elif request.method=='POST':
+        query = json.loads(request.stream.read());
+        pass;
+
+    qres = getScores(db,query);
     ret = dict();
     ret['success'] = True;
     ret['data'] = qres;
