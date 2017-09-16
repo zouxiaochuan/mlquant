@@ -30,7 +30,7 @@ def updatedb(dataname,keys,filterSecID=True):
         pass;
 
     df = dfOrigin.append(dfAppend);
-    df[~df.index.duplicated(keep='last')];
+    df = df[~df.index.duplicated(keep='last')];
     df.to_csv(dstpath);
     
     pass;
@@ -76,7 +76,7 @@ def completeFundETFConsGet():
         addDf = df[dts==preDt];
         addDf.reset_index(inplace=True);
         addDf.loc[:,'tradeDate'] = dt;
-        addDf.set_index(['secID','tradeDate'],inplace=True);
+        addDf.set_index(config.DATA_NAMES['FundETFConsGet'],inplace=True);
 
         dfComp = dfComp.append(addDf);
         pass;
@@ -143,7 +143,9 @@ def getLabelAndFeature(labelName,featureNames):
     features = getFeature(featureNames);
     label = getLabel(labelName);
 
-    return label.join(features,how='left');
+    df = label.join(features,how='inner');
+    return df;
+    
 
 def scanColumnName(pattern,columns):
     dataPath = getdb();

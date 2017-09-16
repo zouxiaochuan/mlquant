@@ -26,17 +26,15 @@ class StrategyEvery1DayTrade():
     def handle(self,dt,t,trader,decFactor):
         if t=='close':
             selled = set();
-            for pos in trader.getPositions():
-                if pos['holdDays']>0:
-                    sec = pos['secID'];
-                    preClosePrice = trader.getPreClosePrice(sec);
-                    price = trader.getPrice(sec);
+            for pos in trader.getAvailable():
+                sec = pos['secID'];
+                preClosePrice = trader.getPreClosePrice(sec);
+                price = trader.getPrice(sec);
 
-                    if (price-preClosePrice)/preClosePrice>=0.098:
-                        continue;
-                    else:
-                        selled.add(sec);
-                        pass;
+                if (price-preClosePrice)/preClosePrice>=0.098:
+                    continue;
+                else:
+                    selled.add(sec);
                     pass;
                 pass;
 

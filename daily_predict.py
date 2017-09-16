@@ -8,11 +8,11 @@ import pandas as pd;
 
 def main(modelPath,outpath):
     df = dataio.getLabelAndFeature(config.LABEL,config.FEATURE_SELECT);
-
     df = dataio.joinTurnoverRank(df);
     dts = df.index.get_level_values('tradeDate').values;
     maxDt = np.max(dts);
     df = df[dts==maxDt];
+
 
     feature = df[config.FEATURE_SELECT].values;
     cls = pickle.load(open(modelPath));

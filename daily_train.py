@@ -5,6 +5,7 @@ import xgboost as xgb;
 import cPickle as pickle;
 import numpy as np;
 import utils_common;
+import os;
 
 def daily_train(feature,label,dts,dtEnd,savePath):    
     idx = (dts<dtEnd) & (dts>=utils_common.dtAdd(dtEnd,-config.TRAINING_DAYS));
@@ -39,13 +40,22 @@ def loadData():
     labelBin = np.where(label>=config.FILT_UP,1,0);
     return labelBin,feature,dts;
 
-def main(dtEnd,savePath):
+def main(dtStart,dtEnd,savePath):
     label,feature,dts = loadData();
+    
+    dt = dtStart;
 
-    daily_train(feature,label,dts,dtEnd,savePath);
+    while dt<=dtEnd:
+        filename = 'xgb_' + dt;
+        print(dt);
+        daily_train(feature,label,dts,dt,os.path.join(savePath,filename));
+        dt = utils_common.dtAdd(dt,1);
+        pass;
+    pass;
 
 if __name__=='__main__':
-    dtEnd = sys.argv[1];
-    savePath = sys.argv[2];
-    main(dtEnd,savePath);
-    pass;
+    dtStart = sys.argv[1];
+    dtEnd = sys.argv[2];
+    savePath = sys.argv[3];
+    main(dtStart,dtEnd,savePath);
+

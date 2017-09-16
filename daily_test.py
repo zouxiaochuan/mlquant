@@ -25,7 +25,7 @@ def daily_test(feature,dts,index,initMoney,startDt,modelFile,strategy):
     backtest.backtest(initMoney,startDt,'2019-01-01',strategy,decFactor);
     pass;
 
-def main(modelPath,startDt,endDt,initMoney,strategy,reportPath):
+def main(modelPath,startDt,endDt,initMoney,strategy,reportPath,testStartDt):
     df = dataio.getLabelAndFeature(config.LABEL,config.FEATURE_SELECT);
     df = dataio.joinTurnoverRank(df);
     
@@ -41,7 +41,7 @@ def main(modelPath,startDt,endDt,initMoney,strategy,reportPath):
 
         with open(os.path.join(reportPath,filename),'w') as fout:
             sys.stdout = fout;
-            daily_test(feature,dts,index,initMoney,dt,
+            daily_test(feature,dts,index,initMoney,testStartDt,
                        os.path.join(modelPath,filename),
                        strategy);
             sys.stdout = stdout;
@@ -56,5 +56,6 @@ if __name__=='__main__':
     initMoney = float(sys.argv[4]);
     strategy = utils_common.getStrategy(sys.argv[5]);
     reportPath = sys.argv[6];
-    main(modelPath,startDt,endDt,initMoney,strategy,reportPath);
+    testStartDt = sys.argv[7];
+    main(modelPath,startDt,endDt,initMoney,strategy,reportPath,testStartDt);
     pass;

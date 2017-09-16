@@ -2,29 +2,45 @@ import utils_common;
 import sys;
 from config import dataio;
 
+globalMarket = None;
+globalTradingDays = None;
+
 class BacktestTrader(object):
     def __init__(self,initMoney):
+        global globalMarket,globalTradingDays;
+        
         self.buyFee_ = 0.001;
         self.sellFee_ = 0.002;
         self.cache_ = initMoney;
-        
-        records = dataio.getdf('MktEqudAdjAfGet').to_records();
-        self.market_ = dict();
 
-        self.tradingDays_ = set();
-        for i,rec in enumerate(records):
-            if i%10000==0:
-                #print(i);
+        if globalMarket is None:
+            records = dataio.getdf('MktEqudAdjAfGet').to_records();
+            self.market_ = dict();
+
+            self.tradingDays_ = set();
+            for i,rec in enumerate(records):
+                if i%10000==0:
+                    #print(i);
+                    pass;
+                self.market_[(rec['secID'],rec['tradeDate'])] = rec;
+                self.tradingDays_.add(rec['tradeDate']);
                 pass;
-            self.market_[(rec['secID'],rec['tradeDate'])] = rec;
-            self.tradingDays_.add(rec['tradeDate']);
+            globalMarket = self.market_;
+            globalTradingDays = self.tradingDays_;
             pass;
+        else:
+            self.market_ = globalMarket;
+            self.tradingDays_ = globalTradingDays;
 
         self.position_ = [];
         pass;
 
     def isTradingDay(self,dt):
         return dt in self.tradingDays_;
+
+    def reset(self,cache):
+        self.cache_ = cache;
+        self.position_ = [];
     
     def setTime(self,dt,time):
         if not self.isTradingDay(dt):
@@ -123,8 +139,14 @@ class BacktestTrader(object):
             pass;
         pass;
 
-    def getPositions(self):
-        return self.position_;
+    def getAvailable(self):
+        ret = [];
+        for pos in self.position_:
+            if pos['holdDays']>0:
+                ret.append(pos);
+                pass;
+            pass;
+        return ret;
 
     def getBuyFee(self):
         return self.buyFee_;
@@ -134,11 +156,11 @@ class BacktestTrader(object):
 def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
     print('dt start: ' + dtStart + ', dt end:' + dtEnd);
 
-    trader = BacktestTrader(initMoney);
-
     totals = [];
     gains = [];
 
+    trader = BacktestTrader(initMoney);
+    
     totals.append(trader.getMarketValue());
 
     numDt = 0;
@@ -159,7 +181,7 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
         #print('open: ' + str(len(trader.getPositions())) + ', cache: ' + str(trader.cache_));
         trader.setTime(dt,'close');
         strategy.handle(dt,'close',trader,decFactorDt);
-        #print('close: ' + str(len([pos['secID'] for pos in trader.getPositions()])) + ', cache: ' + str(trader.cache_));
+        print('close: ' + str([pos['secID'] for pos in trader.position_]) + ', cache: ' + str(trader.cache_));
 
         #print('close: ' + str(trader.getPositions()) + ', cache: ' + str(trader.cache_));
 
