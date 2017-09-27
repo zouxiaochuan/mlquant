@@ -74,7 +74,7 @@ def dtDiff(dt1,dt2):
     return (date1-date2).days;
 
 def getCurrentDt():
-    return datetime.datetime.strftime(datetime.datetime(),'%Y-%m-%d');
+    return datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d');
 
 def getStrategy():
     pass;
