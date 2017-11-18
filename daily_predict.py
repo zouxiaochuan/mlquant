@@ -6,11 +6,14 @@ import utils_common;
 import numpy as np;
 import pandas as pd;
 
-def main(modelPath,outpath):
+def main(modelPath,outpath,maxDt=None):
     df = dataio.getLabelAndFeature(config.LABEL,config.FEATURE_SELECT);
     df = dataio.joinTurnoverRank(df);
     dts = df.index.get_level_values('tradeDate').values;
-    maxDt = np.max(dts);
+    if maxDt is None:
+        maxDt = np.max(dts);
+        pass;
+    
     df = df[dts==maxDt];
 
 
@@ -20,13 +23,13 @@ def main(modelPath,outpath):
 
     dfout = pd.DataFrame(pred,
                          index=df.index,
-                         columns = ['score']
-                         );
+                         columns = ['score']);
+    dfout.sort_values(['score'],inplace=True,ascending=False);
 
     dfout.to_csv(outpath,float_format='%g');
     pass;
 
 
 if __name__=='__main__':
-    main(sys.argv[1],sys.argv[2]);
+    main(sys.argv[1],sys.argv[2],sys.argv[3]);
     pass;

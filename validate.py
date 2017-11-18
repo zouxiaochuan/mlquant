@@ -32,7 +32,36 @@ FEATURE_SELECT = [
     'FeaLastTurnoverValueGrad_2',
     'FeaLastTurnoverValueGrad_3',
     'FeaHighLowRateSum_max_5',
-    'FeaHighLowRateSum_min_5'
+    'FeaHighLowRateSum_min_5',
+    'FeaHighLowRateSum_max_10',
+    'FeaHighLowRateSum_min_10'
+    ,'FeaHighLowRateSum_max_20'
+    ,'FeaHighLowRateSum_min_20'
+    ,'FeaFlowRate_1'
+    ,'FeaFlowRate_5'
+    ,'FeaFlowRate_10'
+    ,'FeaFlowRate_20'
+    ,'FeaLastTurnoverValueMA_5'
+    ,'FeaLastTurnoverValueMA_10'
+    ,'FeaLastTurnoverValueMA_20'
+    ,'FeaLastGainMA_5'
+    ,'FeaLastGainMA_10'
+    ,'FeaLastGainMA_20'
+    #,'FeaFlowGradRate_moneyInflow_1'
+    #,'FeaFlowGradRate_moneyOutflow_1'
+    ,'FeaFlowGradRate_netMoneyInflow_1'
+    #,'FeaFlowOrderRate_inflowS_1'
+    #,'FeaFlowOrderRate_outflowS_1'
+    ,'FeaLastGainStats_MaxSumSubList_200'
+    ,'FeaLastGainStats_MinSumSubList_200'
+    ,'FeaLastGainStats_PositiveRate_50'
+    ,'FeaLastGainStats_NegativeRate_50'
+    ,'FeaLastGainStats_PositiveRate_5'
+    #,'FeaIndexSZZZGainSum_1'
+    ,'FeaLastMarginRate_rzye_0'
+    ,'FeaLastMarginRate_rzye_1'
+    ,'FeaLastMarginRate_rzye_2'
+    ,'FeaLastMarginRate_rzye_3'
     #'FeaTalib_MA_5',
     #'FeaTalib_MA_10',
     #'FeaTalib_MA_20',
@@ -52,19 +81,19 @@ YEARS = [
     ,'2018'];
 
 FILT_UP = 0.02;
-FILT_DOWN = 0.01;
+FILT_DOWN = 0.015;
 WEIGHTER = weight_generator.Step();
 FEATURE_NUM = 80;
 
 def validateReg(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
     #cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=150);
-    cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.05,n_estimators=150);
+    cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.09,n_estimators=150);
     #print(featureTrain.shape);
     #print(featureTest.shape);
     #print(labelTest);
     print('training sample: {0}'.format(featureTrain.shape[0]));
     cls.fit(featureTrain,labelTrain,
-            #sample_weight=weightTrain,
+            sample_weight=weightTrain,
             eval_set=[(featureTrain,labelTrain),
                       (featureTest,labelTest)]
             );
@@ -97,6 +126,10 @@ def validate(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
     print('training sample: {0}'.format(featureTrain.shape[0]));
     print(len(weightTrain));
     weightTrain = weightTrain[idxChoose];
+    #w2 = np.ones(labelTrain.shape);
+    #w2[labelTrain<-0.05] = 3.0;
+    #weightTrain = weightTrain * w2;
+    
     cls.fit(featureTrain,labelBin,eval_metric='auc',sample_weight=weightTrain,
             eval_set=[(featureTrain,labelBin),
                       (featureTest,labelTestBin)]

@@ -10,6 +10,7 @@ import importlib;
 import sys;
 import inspect;
 import imp;
+import statio;
 
 
 def system(cmd,ignoreError=False):
@@ -122,6 +123,15 @@ def minSumSubList(alist):
         pass;
     return best;
 
+def maxSumSubList(alist):
+    best = cur = 0;
+    for v in alist:
+        cur = max(cur + v, 0);
+        best = max(best, cur);
+        pass;
+    return best;
+    
+
 def computeGrad(vlist):
     rlist = [];
     for i in range(len(vlist)):
@@ -132,6 +142,55 @@ def computeGrad(vlist):
             pass;
         pass;
     return rlist;
+
+def computeGradRate(vlist):
+    rlist = [];
+    for i in range(len(vlist)):
+        if i==0:
+            rlist.append(None);
+        else:
+            if vlist[i-1]==0:
+                rlist.append(0);
+            else:
+                rlist.append((vlist[i]-vlist[i-1])/abs(vlist[i-1]));
+                pass;
+            pass;
+        pass;
+    return rlist;
+
+def computeChiRate(vlist):
+    rlist = [];
+    for i in range(len(vlist)):
+        if i==0:
+            rlist.append(None);
+        else:
+            nu = vlist[i]-vlist[i-1];
+            de = float(vlist[i]+vlist[i-1]);
+
+            if de==0:
+                rlist.append(0);
+            else:
+                rlist.append(nu/de);
+                pass;
+            pass;
+        pass;
+    return rlist;
+    
+
+def computeGradRateIntervals(vlist,intervals):
+
+    results = [[] for i in intervals];
+    for i in range(len(vlist)):
+        for ii,interval in enumerate(intervals):
+            istart = max(0,i-interval);
+            if vlist[istart]==0:
+                results[ii].append(0);
+            else:
+                results[ii].append((vlist[i]-vlist[istart])/abs(vlist[istart]));
+                pass;
+            pass;
+        pass;
+    return results;
 
 def bucketValue(val,blist):
 
@@ -287,5 +346,43 @@ def slideWindowMaximum(values,windowSize):
 
     return ret;
 
+def slideWindowMinimum(values,windowSize):
+    values = [-i for i in values];
+    ret = slideWindowMaximum(values,windowSize);
+    ret = [-i for i in ret];
+    return ret;
+
+def slideWindowAverage(values,windowSize):
+    vsum = 0.0;
+    vnum = 0;
+    ret = [];
+    
+    for i in range(len(values)):
+        if i>=windowSize:
+            vsum -= values[i-windowSize];
+            vnum -= 1;
+            pass;
+        vsum += values[i];
+        vnum += 1;
+        
+        ret.append(vsum/vnum);
+        pass;
+    
+    return ret;
+
+def sharpRatio(returns,noRiskReturn):
+    if len(returns)<=1:
+        return 0.0;
+    std = np.std(returns);
+    return (returns[-1]-noRiskReturn*len(returns))/std;
+
+
+x = np.random.random(10000);
+
+def main():
+    slideWindowMaximum(x,10);
+    #statio.max_values(x,10);
+    pass;
+
 if __name__=='__main__':
-    print(slideWindowMaximum([4,5,8,7,6,2,1,9],4));
+    main();

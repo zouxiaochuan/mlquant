@@ -158,6 +158,7 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
 
     totals = [];
     gains = [];
+    tReturns = [];
 
     trader = BacktestTrader(initMoney);
     
@@ -166,9 +167,13 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
     numDt = 0;
     dt = dtStart;
     dts = decFactor.keys();
-    dts.remove('9999-99-99');
+    if '9999-99-99' in dts:
+        dts.remove('9999-99-99');
+        pass;
+    
     maxDt = max(dts);
     dtEnd = min(dtEnd,maxDt);
+    dt = max(dt,min(dts));
     while dt<=dtEnd:
         if not trader.isTradingDay(dt):
             dt = utils_common.dtAdd(dt,1);
@@ -178,18 +183,19 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
         trader.setTime(dt,'open');
         strategy.handle(dt,'open',trader,decFactorDt);
 
+        #print(decFactorDt.shape);
         #print('open: ' + str(len(trader.getPositions())) + ', cache: ' + str(trader.cache_));
         trader.setTime(dt,'close');
         strategy.handle(dt,'close',trader,decFactorDt);
-        print('close: ' + str([pos['secID'] for pos in trader.position_]) + ', cache: ' + str(trader.cache_));
-
-        #print('close: ' + str(trader.getPositions()) + ', cache: ' + str(trader.cache_));
-
+        # print('close: ' + str([pos['secID'] for pos in trader.position_]) + ', cache: ' + str(trader.cache_));
+        # print('close: ' + str(trader.getPositions()) + ', cache: ' + str(trader.cache_));
 
         totals.append(trader.getMarketValue());
         gains.append((totals[-1]-totals[-2])/totals[-2]);
+        tReturns.append((totals[-1]-totals[0])/totals[0]);
 
-        print('dt: {0}, value: {1}, gains: {2}'.format(dt,totals[-1],gains[-1]));
+        print('dt: {0}, value: {1}, gains: {2}, sharp: {3}'.format(dt,totals[-1],gains[-1],
+              utils_common.sharpRatio(tReturns,0.1/200)));
         
         dt = utils_common.dtAdd(dt,1);
         numDt+=1;
@@ -200,19 +206,21 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
     posDays = len([i for i in gains if i>0]);
     totalDays = numDt;
     print('posive days: {0}/{1}'.format(float(posDays)/totalDays,totalDays));
+    print('sharp ratio : {0}'.format(utils_common.sharpRatio(tReturns,0.1/200)));
     print(totalDays);
 
     pass;
 
 def main():
-    dtStart = '2017-01-01';
+    dtStart = '2016-01-01';
     dtEnd = '2018-01-01';
-    initMoney = 1000000;
+    initMoney = 10000000;
     decFactorName = 'DecFactorPredictGainD1';
 
     strategy = utils_common.getStrategy(sys.argv[1]);
     decFactor = dataio.getDecFactor(decFactorName);
     decFactor.reset_index(inplace=True);
+    decFactor.sort_values(['tradeDate',decFactorName],inplace=True,ascending=False);
     decFactor = utils_common.groupDt(decFactor);
     
     backtest(initMoney,dtStart,dtEnd,strategy,decFactor);

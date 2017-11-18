@@ -21,7 +21,7 @@ class Step(object):
             return np.ones(num);
         else:
             ret = np.ones(num);
-            ret[self.step_:] = 0.175;
+            ret[self.step_:] = 0.55;
             return ret;
             pass;
         pass;

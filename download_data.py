@@ -1,12 +1,14 @@
 
 import mercury;
 import utils_common;
+import config;
 
 def download(names):
     client = mercury.Client('zouxiaochuan@163.com','iphoipho');
     client.list_data();
     for name in names:
-        #print(name);
+        if name in config.TUSHARE_DATA_NAME:
+            continue;
         utils_common.system('rm -rf *.csv.gz');
         client.download_data(name,True);
         utils_common.system('mkdir -p ../raw/{0}'.format(name));

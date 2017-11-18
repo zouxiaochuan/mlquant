@@ -21,7 +21,9 @@ def daily_test(feature,dts,index,initMoney,startDt,modelFile,strategy):
                          );
 
     dfDec = utils_common.shiftDtPost(dfDec);
-    decFactor = utils_common.groupDt(dfDec.reset_index());
+    dfDec.reset_index(inplace=True);
+    dfDec.sort_values(['tradeDate','DecFactor'],inplace=True,ascending=False);
+    decFactor = utils_common.groupDt(dfDec);
     backtest.backtest(initMoney,startDt,'2019-01-01',strategy,decFactor);
     pass;
 

@@ -7,6 +7,7 @@ import sys;
 import numpy as np;
 import utils_common;
 #import easyquotation;
+import config;
 
 def testFunctionName():
     funcNames = talib.get_functions();
@@ -74,6 +75,17 @@ def testDecFactor():
     print(utils_common.topNacc(df.index.get_level_values('tradeDate'),
                                np.squeeze(df['LabelEvery1DayTrade'].values),
                                np.squeeze(df['DecFactorPredictGainD1'].values),5));
+    pass;
+
+def testFeatureSize():
+    features = dataio.getFeature(config.FEATURE_SELECT);
+    label = dataio.getLabel(config.LABEL);
+
+    df = label.join(features,how='left');
+    print(df.shape);
+    df = df[pd.notnull(df[config.LABEL])];
+    print(df.shape);
+    pass;
 if __name__=='__main__':
     #print(dataio.getdb()['MktEqudAdjAfGet'].distinct('secID'));
     #df = pd.read_csv('../raw/MktEqudAdjAfGet.csv',index_col=['secID','tradeDate']);
@@ -91,5 +103,6 @@ if __name__=='__main__':
     #testQuotation();
     #testIndex();
     #testIntegrity();
-    testDecFactor();
+    #testDecFactor();
+    testFeatureSize();
 

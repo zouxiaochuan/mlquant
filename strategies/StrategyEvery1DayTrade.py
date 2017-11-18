@@ -43,11 +43,11 @@ class StrategyEvery1DayTrade():
 
         if decFactor is None:
             return;
-        decFactor.sort_values([c for c in decFactor.columns if c!='secID' and c!='tradeDate'],
-                              inplace=True,ascending=False);
+        #decFactor.sort_values([c for c in decFactor.columns if c!='secID' and c!='tradeDate'],
+        #                      inplace=True,ascending=False);
         if t=='open':
             selected = []
-            for i in range(100):
+            for i in range(min(100,decFactor.shape[0])):
                 if decFactor.values[i,1]>0.0:
                     sec = decFactor.values[i,0];
                     preClosePrice = trader.getPreClosePrice(sec);
@@ -65,7 +65,7 @@ class StrategyEvery1DayTrade():
                 pass;
 
             maxSpend = 0.5 * trader.getMarketValue();
-            minSpend = max(5000,maxSpend*0.2);
+            minSpend = max(5000,maxSpend*0.175);
             prices = trader.getPrices(selected);
             amounts = self.calculateAmount(prices,minSpend,maxSpend,trader.getBuyFee());
 

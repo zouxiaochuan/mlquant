@@ -25,20 +25,20 @@ def daily_train(feature,label,dts,dtEnd,savePath):
     pass;
 
 def loadData():
-    df = dataio.getLabelAndFeature(config.LABEL,config.FEATURE_SELECT);
-    df = df[df[config.LABEL]>-1];
-    df = dataio.joinTurnoverRank(df);
+    df = dataio.getLabelAndFeature(config.LABEL, config.FEATURE_SELECT)
+    df = df[df[config.LABEL] > -1]
+    df = dataio.joinTurnoverRank(df)
 
-    dts = df.index.get_level_values('tradeDate');
+    dts = df.index.get_level_values('tradeDate')
 
-    label = np.squeeze(df[[config.LABEL]].values);
-    feature = df[config.FEATURE_SELECT].values;
-    idxChoose = ((label<config.FILT_DOWN) | (label>=config.FILT_UP));
-    label = label[idxChoose];
-    feature = feature[idxChoose];
-    dts = dts[idxChoose];
-    labelBin = np.where(label>=config.FILT_UP,1,0);
-    return labelBin,feature,dts;
+    label = np.squeeze(df[[config.LABEL]].values)
+    feature = df[config.FEATURE_SELECT].values
+    idxChoose = ((label < config.FILT_DOWN) | (label >= config.FILT_UP))
+    label = label[idxChoose]
+    feature = feature[idxChoose]
+    dts = dts[idxChoose]
+    labelBin = np.where(label >= config.FILT_UP, 1, 0)
+    return labelBin, feature, dts
 
 def main(dtStart,dtEnd,savePath):
     label,feature,dts = loadData();

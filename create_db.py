@@ -6,7 +6,7 @@ if __name__=='__main__':
     dataio.initdb();
 
     datanames = config.DATA_NAMES;
-    datanames = {'FundETFConsGet': ['secID','tradeDate','consID']};
+    datanames = {'MarginDetails': ['secID','tradeDate']};
     for dataname,keys in datanames.items():
         print(dataname);
         if dataname=='MktFunddAdjGet' or dataname=='FundETFConsGet':

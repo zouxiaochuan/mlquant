@@ -10,6 +10,8 @@ def main():
     download_data.download(names);
 
     for name,keys in config.DATA_NAMES.items():
+        if name in config.TUSHARE_DATA_NAME:
+            continue;
         if name=='MktFunddAdjGet' or name=='FundETFConsGet':
             flt = False;
         else:

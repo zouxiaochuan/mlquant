@@ -1,14 +1,15 @@
-import utils_io;
-import pandas as pd;
-import config;
-import os;
-import pandas as pd;
+import pandas as pd
+import config
+import os
 import utils_stock;
 import utils_parallel;
 import utils_common;
 import numpy as np;
 import utils_stock;
 import glob;
+import json;
+import sys;
+from itertools import izip;
 
 def initdb():
     pass;
@@ -29,14 +30,14 @@ def updatedb(dataname,keys,filterSecID=True):
         
         pass;
 
-    df = dfOrigin.append(dfAppend);
+    df = dfOrigin.append(dfAppend)
     df = df[~df.index.duplicated(keep='last')];
     df.to_csv(dstpath);
     
     pass;
 
 def importdb(dataname,keys,filterSecID=True):
-    dstpath = os.path.join(getdb(),dataname);
+    dstpath = os.path.join(getdb(), dataname)
     path = os.path.join(config.LOCAL_PATH_RAW,dataname + '.csv');
     df = pd.read_csv(path,index_col=keys);
 
@@ -56,35 +57,87 @@ def completeFundETFConsGet():
     df = getdf('FundETFConsGet');
     dfMarket = getdf('MktEqudAdjAfGet');
 
+    secIDs = df.index.get_level_values('secID').values;
+    tradeDates = df.index.get_level_values('tradeDate').values;
+    usecs = np.unique(secIDs);
+
     udtMarket = np.unique(dfMarket.index.get_level_values('tradeDate').values);
-    dts = df.index.get_level_values('tradeDate').values;
-    udtFund = np.unique(dts);
-    minDt = np.min(dts);
-    missDt = {dt for dt in udtMarket if dt not in udtFund and dt>=minDt};
 
-    print(missDt);
-    completeDtMap = dict();
     dfComp = df.copy();
-    for dt in missDt:
-        for i in range(20):
-            preDt = utils_common.dtAdd(dt,-i);
-            if preDt in udtFund:
-                break;
-            pass;
-        if preDt not in udtFund:
-            raise RuntimeError('cannot find previous date');
-        addDf = df[dts==preDt];
-        addDf.reset_index(inplace=True);
-        addDf.loc[:,'tradeDate'] = dt;
-        addDf.set_index(config.DATA_NAMES['FundETFConsGet'],inplace=True);
+    for secID in usecs:
+        idx = secIDs==secID;
+        dts = tradeDates[idx];
+        minDt = np.min(dts);
+        missDt = {dt for dt in udtMarket if dt not in dts and dt>=minDt};
 
-        dfComp = dfComp.append(addDf);
+        print('{0}:{1}'.format(secID,json.dumps(list(missDt))));
+        
+        for dt in missDt:
+            for i in range(20):
+                preDt = utils_common.dtAdd(dt,-i);
+                if preDt in dts:
+                    break;
+                pass;
+            if preDt not in dts:
+                print('cannot find previous date, sec: {0}'.format(secID));
+                break;
+            
+            addDf = df[idx & (tradeDates==preDt)];
+            addDf.reset_index(inplace=True);
+            addDf.loc[:,'tradeDate'] = dt;
+            addDf.set_index(config.DATA_NAMES['FundETFConsGet'],inplace=True);
+
+            dfComp = dfComp.append(addDf);
+            pass;
         pass;
 
     dfComp.to_csv(os.path.join(getdb(),'FundETFConsGet'));
     pass;
 
+def structArray2dicts(r):
+    return [dict(izip(r.dtype.names,x)) for x  in r];
+
+def forEachSecIDGetBatch(df,func):
+    for name,group in df.groupby('secID',group_keys=False):
+        yield name,group,func;
+        pass;
+    pass;
+
+def forEachSecIDInternal(param):
+    secID = param[0];
+    recs = param[1].to_records();
+    func = param[2];
+
+    return func(secID,recs);
+
+def forEachSecIDEx(df,func,feaNames):
+    rets =  utils_parallel.parallel(forEachSecIDInternal,forEachSecIDGetBatch(df,func));
+
+    index = [i for ret in rets for i in ret[0]];
+    fea = np.vstack([ret[1] for ret in rets]);
+
+    df = pd.DataFrame(fea,
+                      index=pd.MultiIndex.from_tuples(index,
+                                                      names=['secID','tradeDate']),
+                      columns=feaNames);
+    return df;
+
+
 def forEachSecID(df,func):
+    df.sort_index(inplace=True);
+
+    ret = [];
+    for i,(name,group) in enumerate(df.groupby('secID',group_keys=False)):
+        ret.append(func(name,group.to_records()));
+        if i%100==0:
+            sys.stdout.write('.');
+            sys.stdout.flush();
+        pass;
+
+    sys.stdout.write('\n');
+    return ret;
+    
+def forEachSecIDOld(df,func):
     df.sort_index(inplace=True);
 
     secs = df.index.get_level_values('secID');
@@ -100,7 +153,7 @@ def forEachSecID(df,func):
             pass;
         pass;
 
-    ranges.append((secs[i-1],start,i));
+    ranges.append((secs[i-1],start,i+1));
 
     ret = [];
     for i,(sec,start,end) in enumerate(ranges):
@@ -116,6 +169,7 @@ def forEachSecID(df,func):
 def forEachTradeDate(df):
     df.groupby('tradeDate');
     pass;
+
 def save_df(df,name):
     dstpath = os.path.join(getdb(),name);
     df.to_csv(dstpath,float_format='%g');
@@ -143,7 +197,7 @@ def getLabelAndFeature(labelName,featureNames):
     features = getFeature(featureNames);
     label = getLabel(labelName);
 
-    df = label.join(features,how='inner');
+    df = label.join(features,how='left');
     return df;
     
 
@@ -195,6 +249,14 @@ def joinTurnoverRank(df,num=500):
     df = df.join(dfRank,how='inner');
     df.drop('FeaLastTurnoverRank',axis=1,inplace=True);
     return df;
+
+def getStockCode2SecID():
+    dfMkt = getdf('MktEqudAdjAfGet')['ticker'];
+    tickers = np.squeeze(dfMkt.values);
+    secIDs = dfMkt.index.get_level_values('secID');
+
+    return {secID.split('.')[0]:secID for secID,ticker in izip(secIDs,tickers)};
+
     
 if __name__=='__main__':
     print(getAllFeatureNames());

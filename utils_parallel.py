@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from pathos.multiprocessing import Pool;
+#from pathos.multiprocessing import Pool;
+from multiprocessing import Pool;
 
-NUM_PROC=20;
+NUM_PROC=30;
 
 def parallel(func,params,nProc=NUM_PROC):
     pool = Pool(processes=nProc);

@@ -16,6 +16,15 @@ class FeaHighLowRateSum(object):
             close = [rec['closePrice'] for rec in recs];
             high = [rec['highestPrice'] for rec in recs];
             low = [rec['lowestPrice'] for rec in recs];
+            low = [99999 if i==0 else i for i in low];
+
+            ndayHigh = [];
+            ndayLow = [];
+
+            for nday in self.ndays_:
+                ndayHigh.append(utils_common.slideWindowMaximum(high,nday));
+                ndayLow.append(utils_common.slideWindowMinimum(low,nday));
+                pass;
             
             indices = [];
             
@@ -26,24 +35,9 @@ class FeaHighLowRateSum(object):
                 indices.append((secID,tradeDate));
 
                 for ii,nday in enumerate(self.ndays_):
-                    maxp = close[i];
-                    minp = close[i];
-                    
-                    for iii in range(nday):
-                        pos = i-iii;
-                        if pos<=0:
-                            pos = 0;
-                            pass;
-
-                        if high[pos]>0:
-                            maxp = max(maxp,high[pos]);
-                            pass;
-
-                        if low[pos]>0:
-                            minp = min(minp,low[pos]);
-                            pass;
-                        pass;
-                    
+                    maxp = ndayHigh[ii][i];
+                    minp = ndayLow[ii][i];
+                                        
                     fea[i,ii*2] = (close[i]-maxp)/maxp;
                     fea[i,ii*2+1] = (close[i]-minp)/minp;
                     pass;
