@@ -55,19 +55,25 @@ class YHClientTrader(object):
     
     def getPreClosePrice(self,secID):
         return self.getRecords([secID])[secID]['close'];
+
+    def getPricesAndPreClosePrices(self,secList):
+        recs = self.getRecords(secList)
+
+        prices = [recs[sec]['now'] for sec in secList]
+        preClosePrices = [recs[sec]['close'] for sec in secList]
+
+        return prices, preClosePrices
     
     def buyList(self,alist):
         print(alist);
-        sucList = [];
-        secList = [i[0] for i in alist];
-        prices = self.getPrices(secList);
-        for i,(secID,amount) in enumerate(alist):
-            price = self.roundPrice(prices[i]+0.1);
+        for secID,amount,price in alist:
+            price = self.roundPrice(price);
             self.user_.buy(secID,price=price,amount=amount);
             time.sleep(1);
             sucList.append((secID,amount));
             pass;
-        pass;
+
+        return sucList
 
     def roundPrice(self,price):
         return (int(price*100))*0.01;

@@ -4,20 +4,21 @@ class StrategyEvery1DayTrade():
     def __init__(self):
         pass;
 
-    def calculateAmount(self,prices,minSpend,maxSpend,buyFee):
+    def calculateAmount(self,preClosePrices,minSpend,maxSpend,buyFee):
         spend = 0.0;
         amounts = [];
 
-        for price in prices:
-            amount = math.ceil(minSpend/price/100)*100;
-            cspend = (price+0.05) * amount * (1+buyFee);
+        for preClosePrice in preClosePrices:
+            orderPrice = preClosePrice*1.098;
+            amount = math.ceil(minSpend/orderPrice/100)*100;
+            cspend = orderPrice * amount * (1+buyFee);
 
             if (spend+cspend)> maxSpend:
-                amounts.append(0);
+                amounts.append((0,0));
                 continue;
             else:
                 spend += cspend;
-                amounts.append(amount);
+                amounts.append((amount,orderPrice));
                 pass;
             pass;
         return amounts;
@@ -65,11 +66,13 @@ class StrategyEvery1DayTrade():
                 pass;
 
             maxSpend = 0.5 * trader.getMarketValue();
-            minSpend = max(5000,maxSpend*0.175);
-            prices = trader.getPrices(selected);
-            amounts = self.calculateAmount(prices,minSpend,maxSpend,trader.getBuyFee());
+            minSpend = max(5000,maxSpend*0.186);
+            prices,preClosePrices = trader.getPricesAndPreClosePrices(selected);
+            amounts = self.calculateAmount(preClosePrices,minSpend,maxSpend,
+                                           trader.getBuyFee());
 
-            buyList = [(sec,amount) for sec,amount in zip(selected,amounts) if amount>0];
+            buyList = [(sec,amount,price) for sec,(amount,price) in zip(selected,amounts) \
+                       if amount>0];
 
             trader.buyList(buyList);
             pass;
