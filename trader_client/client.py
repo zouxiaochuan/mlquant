@@ -9,7 +9,18 @@ from apscheduler.schedulers.background import BackgroundScheduler;
 import urllib.request as urllib2;
 import json;
 import pandas as pd;
-import utils_common;
+import datetime;
+import imp
+
+def getCurrentDt():
+    return datetime.datetime.strftime(datetime.datetime.now(),'%Y-%m-%d');
+
+def getStrategy(filename):
+    name = filename.split('/')[-1][:-3];
+    m = imp.load_source(name,filename);
+    cls = getattr(m,name);
+
+    return cls();
 
 class YHClientTrader(object):
     def __init__(self,username,passwd,exe_path):
@@ -26,7 +37,7 @@ class YHClientTrader(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.user_.exit();
-        pass;
+        pass
 
     def getRecords(self,secList):
         if len(secList)==0:
@@ -34,7 +45,7 @@ class YHClientTrader(object):
 
         recs = self.quotation_.stocks(secList);
         while secList[0] not in recs:
-            time.sleep(2);
+            time.sleep(1);
             recs = self.quotation_.stocks(secList);
             pass;
         return recs;
@@ -66,6 +77,7 @@ class YHClientTrader(object):
     
     def buyList(self,alist):
         print(alist);
+        sucList = [];
         for secID,amount,price in alist:
             price = self.roundPrice(price);
             self.user_.buy(secID,price=price,amount=amount);
@@ -77,7 +89,19 @@ class YHClientTrader(object):
 
     def roundPrice(self,price):
         return (int(price*100))*0.01;
-    
+
+    def sellList(self,alist):
+        print(alist)
+
+        for secID,amount,price in alist:
+            price = self.roundPrice(price)
+            if amount>0 and price>0:
+                self.user_.sell(secID,price=price,amount=amount)
+                time.sleep(1)
+                pass
+            pass
+        pass
+
     def sellSec(self,secSet):
         for rec in self.user_.position:
             secID = rec['证券代码'];
@@ -133,7 +157,12 @@ def onOpen():
 
     with getTrader() as trader:
         dfDec = getDecFactor();
-        strategy.handle(utils_common.getCurrentDt(),'open',trader,dfDec);
+
+        while datetime.datetime.now().minute < 30:
+            time.sleep(1)
+            pass
+        
+        strategy.handle(getCurrentDt(),'open',trader,dfDec);
         pass;
     pass;
 
@@ -141,15 +170,15 @@ def onClose():
     global strategy;
 
     with getTrader() as trader:
-        defDec = getDecFactor();
-        strategy.handle(utils_common.getCurrentDt(),'close',trader,dfDec);
+        dfDec = getDecFactor();
+        strategy.handle(getCurrentDt(),'close',trader,dfDec);
         pass;
     pass;
 
 def main():
     scheduler = BackgroundScheduler();
-    scheduler.add_job(onOpen,'cron',hour=9, minute=30);
-    scheduler.add_job(onClose,'cron',hour=14, minute=58);
+    scheduler.add_job(onOpen,'cron',hour=9, minute=29);
+    scheduler.add_job(onClose,'cron',hour=14, minute=56);
 
     scheduler.start();
 
@@ -161,7 +190,8 @@ def main():
     pass;
 
 if __name__=='__main__':
-    strategy = utils_common.getStrategy(sys.argv[1]);
+    strategy = getStrategy(sys.argv[1]);
     main();
+    #onClose();
     pass;
 

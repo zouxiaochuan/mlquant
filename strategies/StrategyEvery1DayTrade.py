@@ -29,12 +29,14 @@ class StrategyEvery1DayTrade():
             selled = set();
             for pos in trader.getAvailable():
                 sec = pos['secID'];
+                amount = pos['amount'];
                 preClosePrice = trader.getPreClosePrice(sec);
                 price = trader.getPrice(sec);
 
                 if (price-preClosePrice)/preClosePrice>=0.098:
                     continue;
                 else:
+                    sell_price = preClosePrice * 0.902
                     selled.add(sec);
                     pass;
                 pass;

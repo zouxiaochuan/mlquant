@@ -122,6 +122,44 @@ class BacktestTrader(object):
             pass;
         return sucList;
 
+    def sellList(self,alist):
+        dels = []
+        for secID,amount,sprice in alist:
+            if amount<=0:
+                continue
+
+            for i,pos in enumerate(self.position_):
+                if pos['secID']==secID and pos['holdDays']>0:
+                    price = self.getPrice(secID);
+                    if price<=0:
+                        continue
+                    preClosePrice = self.getPreClosePrice(secID)
+                    if (price-preClosePrice)/preClosePrice<=-0.099:
+                        continue
+
+                    if pos['amount']<=amount:
+                        amount -= pos['amount']
+                        sub_amount = pos['amount']
+                        dels.append(i)
+                        pos['secID']=''
+                        pass
+                    else:
+                        pos['amount'] -= amount
+                        sub_amount = amount
+                        pass
+
+                    self.cache_ += price * sub_amount * (1-self.sellFee_);
+                    if amount==0:
+                        break
+                    pass
+                pass
+            pass
+
+        for i in reversed(dels):
+            self.position_.pop(i)
+            pass
+        pass
+    
     def sellSec(self,aset):
         dels = [];
         for i,pos in enumerate(self.position_):
