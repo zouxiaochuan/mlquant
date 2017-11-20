@@ -88,10 +88,16 @@ class BacktestTrader(object):
 
     def getPreClosePrice(self,secID):
         return self.market_[(secID,self.currentDt_)]['preClosePrice'];
+
+    def getPricesAndPreClosePrices(self,secList):
+        prices = self.getPrices(secList)
+        preClosePrices = [self.getPreClosePrice(sec) for sec in secList]
+
+        return prices, preClosePrices
     
     def buyList(self,alist):
         sucList = [];
-        for secID,amount in alist:
+        for secID,amount,bprice in alist:
             price = self.getPrice(secID);
             if price<=0:
                 continue;
