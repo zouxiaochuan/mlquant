@@ -68,7 +68,7 @@ class StrategyEvery1DayTrade():
                 pass;
 
             maxSpend = 0.5 * trader.getMarketValue();
-            minSpend = max(5000,maxSpend*0.186);
+            minSpend = max(5000,maxSpend*0.168);
             prices,preClosePrices = trader.getPricesAndPreClosePrices(selected);
             amounts = self.calculateAmount(preClosePrices,minSpend,maxSpend,
                                            trader.getBuyFee());

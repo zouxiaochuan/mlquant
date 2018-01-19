@@ -161,7 +161,7 @@ def onOpen():
         while datetime.datetime.now().minute < 30:
             time.sleep(1)
             pass
-        
+
         strategy.handle(getCurrentDt(),'open',trader,dfDec);
         pass;
     pass;
@@ -177,8 +177,10 @@ def onClose():
 
 def main():
     scheduler = BackgroundScheduler();
-    scheduler.add_job(onOpen,'cron',hour=9, minute=29);
-    scheduler.add_job(onClose,'cron',hour=14, minute=56);
+    scheduler.add_job(onOpen,'cron',hour=9, minute=29,
+                      misfire_grace_time=10, coalesce=True);
+    scheduler.add_job(onClose,'cron',hour=14, minute=58,
+                      misfire_grace_time=10, coalesce=True);
 
     scheduler.start();
 
@@ -192,6 +194,6 @@ def main():
 if __name__=='__main__':
     strategy = getStrategy(sys.argv[1]);
     main();
-    #onClose();
+    #onOpen();
     pass;
 
