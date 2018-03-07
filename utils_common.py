@@ -376,6 +376,42 @@ def sharpRatio(returns,noRiskReturn):
     std = np.std(returns);
     return (returns[-1]-noRiskReturn*len(returns))/std;
 
+def maxDrawDown(returns):
+    xs = returns
+    i = np.argmax((np.maximum.accumulate(xs) - xs)/xs) # end of the period
+    if i==0:
+        return 0
+    j = np.argmax(xs[:i]) # start of period
+
+    return (returns[i]-returns[j])/returns[j]
+
+def maxContinous(vals, check_func):
+    max_len = 0
+
+    current_len = 0
+    for v in vals:
+        if check_func(v):
+            current_len += 1
+        else:
+            current_len = 0
+            pass
+        max_len = max(current_len, max_len)
+        pass
+    return max_len
+
+def slideWindowMaxContinuous(vals, window_size, check_func):
+    ret = []
+
+    for i in range(len(vals)):
+        end = i+1
+        start = end-window_size
+        if start<0:
+            start = 0
+            pass
+        ret.append(maxContinous(vals[start:end], check_func))
+        pass
+    return ret
+    pass
 
 x = np.random.random(10000);
 

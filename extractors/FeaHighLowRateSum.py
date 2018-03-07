@@ -6,7 +6,7 @@ import numpy as np;
 
 class FeaHighLowRateSum(object):
     def __init__(self):
-        self.ndays_ = [5,10,20,50,100,200];
+        self.ndays_ = [1,2,5,10,20,50,100,200];
         pass;
     
     def extract(self):
@@ -38,8 +38,8 @@ class FeaHighLowRateSum(object):
                     maxp = ndayHigh[ii][i];
                     minp = ndayLow[ii][i];
                                         
-                    fea[i,ii*2] = (close[i]-maxp)/maxp;
-                    fea[i,ii*2+1] = (close[i]-minp)/minp;
+                    fea[i,ii*2] = (close[i]-maxp)/maxp if maxp!=0 else 0;
+                    fea[i,ii*2+1] = (close[i]-minp)/minp if minp!=0 else 0;
                     pass;
 
                 pass;

@@ -243,12 +243,33 @@ def joinHS300(df):
 
     return df.join(df300,how='inner');
 
-def joinTurnoverRank(df,num=500):
+def getHS300Filter():
+    df300 = getdf('FundETFConsGet')[['quantity']];
+    df300 = df300[df300.index.get_level_values('secID')=='510300.XSHG'];
+    df300.reset_index(inplace=True);
+    df300.drop('secID', axis=1, inplace=True);
+    df300.rename(columns = {'consID':'secID'}, inplace=True);
+    df300.set_index(['secID','tradeDate'],inplace=True);
+
+    return set(df300.index.tolist())
+    pass
+
+def joinTurnoverRank(df,num=800):
     dfRank = getFeature(['FeaLastTurnoverRank'])[0];
-    dfRank = dfRank[dfRank['FeaLastTurnoverRank']<=500];
+    dfRank = dfRank[dfRank['FeaLastTurnoverRank']<=num];
     df = df.join(dfRank,how='inner');
     df.drop('FeaLastTurnoverRank',axis=1,inplace=True);
     return df;
+
+def getTurnoverRankFilter(num=800):
+    dfRank = getFeature(['FeaLastTurnoverRank'])[0];
+    dfRank = dfRank[dfRank['FeaLastTurnoverRank']<=num];
+    return set(dfRank.index.tolist())
+
+def getMaxContinousCloseDayFilter():
+    df = getFeature(['FeaMaxContinousCloseDay_50'])[0]
+    df = df[df['FeaMaxContinousCloseDay_50']==0]
+    return set(df.index.tolist())
 
 def getStockCode2SecID():
     dfMkt = getdf('MktEqudAdjAfGet')['ticker'];

@@ -12,7 +12,8 @@ def daily_test(feature,dts,index,initMoney,startDt,modelFile,strategy):
     idx = dts>=startDt;
     fea = feature[idx];
     cls = pickle.load(open(modelFile));
-    pred = np.squeeze(cls.predict_proba(fea)[:,cls.classes_==1]);
+    #pred = np.squeeze(cls.predict_proba(fea)[:,cls.classes_==1]);
+    pred = np.squeeze(cls.predict(fea));
     index = index[idx];
     dfDec = pd.DataFrame(pred,
                          index=pd.MultiIndex.from_tuples(index,
@@ -29,7 +30,13 @@ def daily_test(feature,dts,index,initMoney,startDt,modelFile,strategy):
 
 def main(modelPath,startDt,endDt,initMoney,strategy,reportPath,testStartDt):
     df = dataio.getLabelAndFeature(config.LABEL,config.FEATURE_SELECT);
-    df = dataio.joinTurnoverRank(df);
+    turnoverFilter = dataio.getTurnoverRankFilter();
+    maxContinousCloseDayFilter = dataio.getMaxContinousCloseDayFilter();
+    secFilter = turnoverFilter & maxContinousCloseDayFilter;
+    idxFilter = np.asarray([True if st in secFilter else False \
+                            for st in df.index]);
+
+    df = df[idxFilter]
     
     feature = df[config.FEATURE_SELECT].values;
     dts = df.index.get_level_values('tradeDate');

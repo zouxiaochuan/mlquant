@@ -7,7 +7,9 @@ NUM_PROC=30;
 
 def parallel(func,params,nProc=NUM_PROC):
     pool = Pool(processes=nProc);
-    return pool.map(func,params);
+    results = pool.map(func,params);
+    pool.close()
+    return results;
 
 def parallel_debug(func,params,nProc=NUM_PROC):
     ret = [];

@@ -150,7 +150,7 @@ def getDecFactor():
     return dfDec;
 
 def getTrader():
-    return YHClientTrader('225300024455','842613', 'D:\ext_c\中国银河证券双子星3.2\Binarystar.exe');
+    return None
 
 def onOpen():
     global strategy;

@@ -9,7 +9,11 @@ import sklearn.preprocessing;
 import numpy as np;
 import utils_common;
 import weight_generator;
+import pandas as pd;
+import math
+import leafsharp_predictor
 
+year = None
 
 FEATURE_SELECT = [
     'FeaLastGainSingle_0',
@@ -21,6 +25,7 @@ FEATURE_SELECT = [
     'FeaLastGainSum_10',
     'FeaLastGainSum_20',
     'FeaLastGainSum_50',
+    #'FeaLastGainSum_100',
     'FeaLastOneDayRate_OpenClose_0',
     'FeaLastOneDayRate_OpenClose_1',
     'FeaLastOneDayRate_High_0',
@@ -37,6 +42,10 @@ FEATURE_SELECT = [
     'FeaHighLowRateSum_min_10'
     ,'FeaHighLowRateSum_max_20'
     ,'FeaHighLowRateSum_min_20'
+    ,'FeaHighLowRateSum_max_50'    
+    ,'FeaHighLowRateSum_min_50'
+    #,'FeaHighLowRateSum_min_100'
+    #,'FeaHighLowRateSum_max_100'
     ,'FeaFlowRate_1'
     ,'FeaFlowRate_5'
     ,'FeaFlowRate_10'
@@ -58,10 +67,23 @@ FEATURE_SELECT = [
     ,'FeaLastGainStats_NegativeRate_50'
     ,'FeaLastGainStats_PositiveRate_5'
     #,'FeaIndexSZZZGainSum_1'
-    ,'FeaLastMarginRate_rzye_0'
-    ,'FeaLastMarginRate_rzye_1'
-    ,'FeaLastMarginRate_rzye_2'
-    ,'FeaLastMarginRate_rzye_3'
+    #,'FeaLastMarginRate_rzye_0'
+    #,'FeaLastMarginRate_rzye_1'
+    #,'FeaLastMarginRate_rzye_2'
+    #,'FeaLastMarginRate_rzye_3'
+    ,'FeaTurnoverRate_0'
+    #,'FeaTurnoverRate_1'
+    #,'FeaGainMultiplyMarket_0'
+    ,'FeaLastAveragePrice_0'
+    ,'FeaLastAveragePrice_1'
+    ,'FeaLastAveragePrice_2'
+    #,'FeaDealAmountGradRate_0'
+    #,'FeaDealAmountGradRate_1'
+    #,'FeaAveragePriceMA_2'
+    #,'FeaAveragePriceMA_5'
+    #,'FeaAveragePriceMA_10'
+    #,'FeaAveragePriceGradRate_0'
+    #,'FeaAveragePriceGradRate_1'
     #'FeaTalib_MA_5',
     #'FeaTalib_MA_10',
     #'FeaTalib_MA_20',
@@ -75,19 +97,22 @@ LABEL = 'LabelEvery1DayTrade';
 
 YEARS = [
     #'2014'
-    '2015'
-    ,'2016'
-    ,'2017'
-    ,'2018'];
+    #'2015',
+    #'2016',
+    '2017-06-01'
+    ,'2018-01-23'
+    #,'2019'
+];
 
-FILT_UP = 0.02;
-FILT_DOWN = 0.015;
-WEIGHTER = weight_generator.Step();
+FILT_UP = 0.019999;
+FILT_DOWN = 0.01900001;
+WEIGHTER = weight_generator.AllSame();
 FEATURE_NUM = 80;
 
 def validateReg(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
     #cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=150);
-    cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.09,n_estimators=150);
+    cls = xgb.XGBRegressor(max_depth=11,learning_rate=0.04,n_estimators=150);
+    #cls = leafsharp_predictor.LeafSharpPredictor()
     #print(featureTrain.shape);
     #print(featureTest.shape);
     #print(labelTest);
@@ -98,15 +123,17 @@ def validateReg(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain
                       (featureTest,labelTest)]
             );
 
+    #print(cls.apply(featureTrain).shape)
     pred = np.squeeze(cls.predict(featureTest));
     print('{0}:{1},{2},{3},{4},{5}'.format(year,
-                                           topNacc(dtTest,labelTest,pred,5),
-                                           topNexp(dtTest,labelTest,5),
                                            topNacc(dtTest,labelTest,pred,10),
+                                           topNexp(dtTest,labelTest,5),
+                                           topNacc(dtTest,labelTest,pred,20),
                                            topNacc(dtTest,labelTest,pred,100),
-                                           'haha'
+                                           math.sqrt(sklearn.metrics.mean_squared_error(labelTest, pred))
     ));
-    
+
+    return pred
     pass;
 
 
@@ -118,7 +145,7 @@ def validate(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
     labelBin = np.where(labelTrain>=FILT_UP,1,0);
     labelTestBin = np.where(labelTest>=FILT_UP,1,0);
 
-    cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=150);
+    cls = xgb.XGBClassifier(max_depth=5,learning_rate=0.2,n_estimators=200);
     #cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.1,n_estimators=150);
     #print(featureTrain.shape);
     #print(featureTest.shape);
@@ -142,7 +169,8 @@ def validate(labelTrain,labelTest,featureTrain,featureTest,dtTest,weightTrain):
                                            topNacc(dtTest,labelTest,pred,10),
                                            topNacc(dtTest,labelTest,pred,100),
                                            sklearn.metrics.roc_auc_score(labelTestBin,pred)));
-    
+
+    return pred
     pass;
 
 def topNacc(dt,label,pred,n):
@@ -205,7 +233,13 @@ if __name__=='__main__':
 
     print(df.shape[0]);
     #df = dataio.joinHS300(df);
-    df = dataio.joinTurnoverRank(df);
+    #df = dataio.joinTurnoverRank(df);
+    turnoverFilter = dataio.getTurnoverRankFilter();
+    maxContinousCloseDayFilter = dataio.getMaxContinousCloseDayFilter();
+    secFilter = turnoverFilter & maxContinousCloseDayFilter;
+    
+    #turnoverFilter = dataio.getHS300Filter();
+
     print(df.shape[0]);
     
     print('prepare...');
@@ -214,11 +248,17 @@ if __name__=='__main__':
     label = np.squeeze(df[[LABEL]].values);
     feature = df[FEATURE_SELECT].values;
 
+    idxFilter = np.asarray([True if st in secFilter else False \
+                            for st in df.index]);
     print('begin');
     for iy,year in enumerate(YEARS[:-1]):
-        dtTrainStart = utils_common.dtAdd(year+'-01-01',-config.TRAINING_DAYS);
-        idxTrain = (dt<year)&(dt>=dtTrainStart);
-        idxTest = (dt>=year)&(dt<YEARS[iy+1]);
+        if len(year)<10:
+            dtTrainStart = utils_common.dtAdd(year+'-01-01',-config.TRAINING_DAYS);
+        else:
+            dtTrainStart = utils_common.dtAdd(year,-config.TRAINING_DAYS);
+            pass
+        idxTrain = (dt<year)&(dt>=dtTrainStart)#&idxFilter;
+        idxTest = (dt>=year)&(dt<YEARS[iy+1])#&idxFilter;
         labelTrain = label[idxTrain];
         labelTest = label[idxTest];
         featureTrain = feature[idxTrain];

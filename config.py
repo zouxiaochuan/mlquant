@@ -20,7 +20,16 @@ DATA_NAMES={
 TUSHARE_DATA_NAME = {'MarginDetails'};
 
 BLACK_LIST=[
-    '000033.XSHE'
+    '000033.XSHE',
+    '600715.XSHG',
+    '000820.XSHE',
+    '000670.XSHE',
+    '600198.XSHG',
+    '600610.XSHG',
+    '603026.XSHG',
+    '600596.XSHG',
+    '600830.XSHG',
+    '600728.XSHG'
 ];
 
 WEIGHTER = weight_generator.Step();
@@ -100,6 +109,8 @@ FEATURE_SELECT = [
     'FeaHighLowRateSum_min_10'
     ,'FeaHighLowRateSum_max_20'
     ,'FeaHighLowRateSum_min_20'
+    ,'FeaHighLowRateSum_max_50'    
+    ,'FeaHighLowRateSum_min_50'
     ,'FeaFlowRate_1'
     ,'FeaFlowRate_5'
     ,'FeaFlowRate_10'
@@ -120,6 +131,10 @@ FEATURE_SELECT = [
     ,'FeaLastGainStats_PositiveRate_50'
     ,'FeaLastGainStats_NegativeRate_50'
     ,'FeaLastGainStats_PositiveRate_5'
+    ,'FeaTurnoverRate_0'
+    ,'FeaLastAveragePrice_0'
+    ,'FeaLastAveragePrice_1'
+    ,'FeaLastAveragePrice_2'
     #'FeaTalib_MA_5',
     #'FeaTalib_MA_10',
     #'FeaTalib_MA_20',
@@ -132,7 +147,9 @@ FEATURE_SELECT = [
 
 LABEL = 'LabelEvery1DayTrade';
 
-FILT_UP = 0.02;
-FILT_DOWN = 0.015;
+FILT_UP = 0.01999999;
+FILT_DOWN = 0.015000001;
+#FILT_UP = 0.01;
+#FILT_DOWN = 0.0;
 
 WEIGHTER = weight_generator.Step();

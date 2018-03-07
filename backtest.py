@@ -35,6 +35,12 @@ class BacktestTrader(object):
         self.position_ = [];
         pass;
 
+    def getCache(self):
+        return self.cache_
+
+    def getPositions(self):
+        return self.position_
+    
     def isTradingDay(self,dt):
         return dt in self.tradingDays_;
 
@@ -122,6 +128,22 @@ class BacktestTrader(object):
             pass;
         return sucList;
 
+    def sellPositions(self, posList):
+        for i in sorted(posList, reverse=True):
+            pos = self.position_[i]
+            price = self.getPrice(pos['secID']);
+            if price<=0:
+                continue;
+            if pos['holdDays']==0:
+                continue;
+            preClosePrice = self.getPreClosePrice(pos['secID']);
+            if (price-preClosePrice)/preClosePrice<=-0.099:
+                continue;
+                
+            self.cache_ += price * pos['amount'] * (1-self.sellFee_);
+            self.position_.pop(i)
+        pass
+    
     def sellList(self,alist):
         dels = []
         for secID,amount,sprice in alist:
@@ -197,7 +219,7 @@ class BacktestTrader(object):
     pass;
 
 
-def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
+def backtest(initMoney,dtStart,dtEnd,strategy,decFactor, outputfile=None):
     print('dt start: ' + dtStart + ', dt end:' + dtEnd);
 
     totals = [];
@@ -218,6 +240,10 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
     maxDt = max(dts);
     dtEnd = min(dtEnd,maxDt);
     dt = max(dt,min(dts));
+    if outputfile is not None:
+        outputfile = open(outputfile,'w')
+        pass
+    
     while dt<=dtEnd:
         if not trader.isTradingDay(dt):
             dt = utils_common.dtAdd(dt,1);
@@ -231,8 +257,8 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
         #print('open: ' + str(len(trader.getPositions())) + ', cache: ' + str(trader.cache_));
         trader.setTime(dt,'close');
         strategy.handle(dt,'close',trader,decFactorDt);
-        # print('close: ' + str([pos['secID'] for pos in trader.position_]) + ', cache: ' + str(trader.cache_));
-        # print('close: ' + str(trader.getPositions()) + ', cache: ' + str(trader.cache_));
+        #print('close: ' + str(len([pos['secID'] for pos in trader.position_])) + ', cache: ' + str(trader.cache_));
+        #print('close: ' + str(trader.getPositions()) + ', cache: ' + str(trader.cache_));
 
         totals.append(trader.getMarketValue());
         gains.append((totals[-1]-totals[-2])/totals[-2]);
@@ -240,6 +266,10 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
 
         print('dt: {0}, value: {1}, gains: {2}, sharp: {3}'.format(dt,totals[-1],gains[-1],
               utils_common.sharpRatio(tReturns,0.1/200)));
+
+        if outputfile is not None:
+            outputfile.write('{0},{1}\n'.format(dt, totals[-1]));
+            pass
         
         dt = utils_common.dtAdd(dt,1);
         numDt+=1;
@@ -252,22 +282,25 @@ def backtest(initMoney,dtStart,dtEnd,strategy,decFactor):
     print('posive days: {0}/{1}'.format(float(posDays)/totalDays,totalDays));
     print('sharp ratio : {0}'.format(utils_common.sharpRatio(tReturns,0.1/200)));
     print(totalDays);
-
+    if outputfile is not None:
+        outputfile.close();
+        pass;
     pass;
 
 def main():
-    dtStart = '2016-01-01';
-    dtEnd = '2018-01-01';
-    initMoney = 10000000;
+    dtStart = '2017-09-13';
+    dtEnd = '2018-01-18';
+    initMoney = 1000000;
     decFactorName = 'DecFactorPredictGainD1';
 
     strategy = utils_common.getStrategy(sys.argv[1]);
+    outputfile = sys.argv[2];
     decFactor = dataio.getDecFactor(decFactorName);
     decFactor.reset_index(inplace=True);
     decFactor.sort_values(['tradeDate',decFactorName],inplace=True,ascending=False);
     decFactor = utils_common.groupDt(decFactor);
     
-    backtest(initMoney,dtStart,dtEnd,strategy,decFactor);
+    backtest(initMoney,dtStart,dtEnd,strategy,decFactor,outputfile);
     pass;
 
 

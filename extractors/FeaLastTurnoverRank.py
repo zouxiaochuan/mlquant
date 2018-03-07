@@ -5,12 +5,14 @@ import numpy as np
 
 class FeaLastTurnoverRank(object):
     def __init__(self):
-        self.ndays_ = 180
+        self.ndays_ = 200
         pass
 
     def extract(self):
         def lastTurnoverMedian(secID, recs):
             val = [rec['turnoverValue'] for rec in recs]
+            val = [v if v>0 else 999999999999.0 for v in val]
+            
             fea = np.zeros((len(recs), 1), dtype=np.float32)
             indices = []
             for i, rec in enumerate(recs):

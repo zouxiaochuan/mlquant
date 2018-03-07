@@ -12,7 +12,7 @@ class BasePredictGain(object):
         pass;
 
     def trainTestReg(self,labelTrain,featureTrain,featureTest,weight):
-        cls = xgb.XGBRegressor(max_depth=4,learning_rate=0.1,n_estimators=150);
+        cls = xgb.XGBRegressor(max_depth=11,learning_rate=0.04,n_estimators=200);
         print('training sample: {0}'.format(featureTrain.shape[0]));
         cls.fit(featureTrain,labelTrain,sample_weight=weight);
         pred = np.squeeze(cls.predict(featureTest));
@@ -27,7 +27,7 @@ class BasePredictGain(object):
         weight = weight[idxChoose];# * labelTrain * labelTrain;
         labelTrainBin = np.where(labelTrain>=config.FILT_UP,1,0);
 
-        cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=150);
+        cls = xgb.XGBClassifier(max_depth=4,learning_rate=0.1,n_estimators=500);
         print('training sample: {0}'.format(featureTrain.shape[0]));
         cls.fit(featureTrain,labelTrainBin,sample_weight=weight);
         pred = np.squeeze(cls.predict_proba(featureTest)[:,cls.classes_==1]);
@@ -38,7 +38,7 @@ class BasePredictGain(object):
         df = df[df[self.labelName_]>-1];
 
         df = dataio.joinTurnoverRank(df);
-        dt = '2013-01-01';
+        dt = '2014-01-01';
 
         dts = df.index.get_level_values('tradeDate');
         indices = df.index.values;
@@ -62,7 +62,7 @@ class BasePredictGain(object):
             featureTest = feature[idxTest];
             weight = utils_common.getWeight(dts[idxTrain],config.WEIGHTER);
 
-            pred = self.trainTest(labelTrain,featureTrain,featureTest,weight);
+            pred = self.trainTestReg(labelTrain,featureTrain,featureTest,weight);
             #print(utils_common.topNPosRate(dts[idxTest],label[idxTest],pred,5));
             
             df = pd.DataFrame(pred,
