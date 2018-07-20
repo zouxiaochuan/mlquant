@@ -15,13 +15,21 @@ def getMaxTradeDate(db):
     return db.aggregate([{ '$group' : { '_id': 'null', 'max': { '$max' : '$tradeDate' }}}]).next()['max'];
 
 def getScores(db,query):
-    return list(db.find(query).sort('score',pymongo.DESCENDING));
+    scores =  list(db.find(query).sort('score',pymongo.DESCENDING));
+    for sc in scores:
+        sc.pop('_id');
+        pass;
+    return scores;
 
 @app.route('/uploadScore',methods=['POST'])
 def uploadScore():
     db = getdb();
     jsonstr = request.stream.read();
     inputs = json.loads(jsonstr);
+    dts = {rec['tradeDate'] for rec in inputs};
+    for dt in dts:
+        db.delete_many({'tradeDate':dt});
+        pass;
 
     for rec in inputs:
         rec['_id'] = rec['secID']+'_'+rec['tradeDate'];
