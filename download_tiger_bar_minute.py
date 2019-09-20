@@ -34,5 +34,5 @@ if __name__ == '__main__':
         config = json.loads(fin.read())
         pass
 
-    download_tiger_bar(config, ['UGAZ'], 'UGAZ', '2015-01-01', '2019-09-15')
+    download_tiger_bar(config, ['UGAZ'], 'UGAZ', '2015-01-01', '2019-08-18')
     pass

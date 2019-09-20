@@ -43,7 +43,7 @@ def get_bars_minute_dt(
         dt: str):
     ms = utils_common.dt2ms(dt)
     start = ms + 12 * 60 * 60 * 1000
-    end = ms + 48 * 60 * 60 * 1000
+    end = ms + 36 * 60 * 60 * 1000
 
     return quote_client.get_bars(
         symbols=symbols,
