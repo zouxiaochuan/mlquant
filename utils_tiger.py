@@ -1,10 +1,32 @@
 from typing import Type
+import time
 import tigeropen.common.consts as tiger_consts
 from tigeropen.tiger_open_config import TigerOpenClientConfig
 from tigeropen.quote.quote_client import QuoteClient
+from tigeropen.push.push_client import PushClient
 from tigeropen.common.util.signature_utils import read_private_key
 
 import utils_common
+
+g_config = None
+g_quote_client = None
+
+
+def call_api(func, time_limit, retry=0):
+    itry = 0
+    while True:
+        try:
+            result = func()
+            time.sleep(time_limit)
+            break
+        except Exception as e:
+            if itry < retry:
+                itry += 1
+            else:
+                raise e
+            pass
+        pass
+    return result
 
 
 def get_client_config(config: dict) -> Type[TigerOpenClientConfig]:
@@ -20,6 +42,22 @@ def get_client_config(config: dict) -> Type[TigerOpenClientConfig]:
 
 def get_quote_client(config: dict) -> Type[QuoteClient]:
     return QuoteClient(get_client_config(config))
+
+
+def set_config(config: dict):
+    global g_config, g_quote_client
+    g_config = config
+
+    g_quote_client = get_quote_client(config)
+
+
+def get_push_client(config: dict) -> Type[PushClient]:
+    client_config = get_client_config(config)
+    protocol, host, port = client_config.socket_host_port
+    push_client = PushClient(host, port, use_ssl=(protocol == 'ssl'))
+
+    push_client.connect(client_config.tiger_id, client_config.private_key)
+    return push_client
 
 
 def get_bars_minute(
@@ -52,3 +90,46 @@ def get_bars_minute_dt(
         end_time=end,
         right=tiger_consts.QuoteRight.BR,
         limit=600)
+
+
+def get_bars_minute_month(
+        quote_client: QuoteClient,
+        symbols: list,
+        dt: str):
+    ms = utils_common.dt2ms(dt)
+    start = ms + (12-31*24) * 60 * 60 * 1000
+    end = ms + 36 * 60 * 60 * 1000
+
+    print(start)
+    print(end)
+
+    return quote_client.get_bars(
+        symbols=symbols,
+        period=tiger_consts.BarPeriod.ONE_MINUTE,
+        begin_time=start,
+        end_time=end,
+        right=tiger_consts.QuoteRight.BR,
+        limit=60000)
+
+
+def get_trade_ticks(
+        symbols: list,
+        limit: int):
+
+    def func(): g_quote_client.get_trade_ticks(
+            symbols, limit=limit)
+
+    return call_api(func, 0.5, 0)
+
+
+def get_future_trade_ticks(
+        symbol: str,
+        begin_index: int,
+        end_index: int,
+        limit: int):
+
+    def func(): g_quote_client.get_future_trade_ticks(
+            symbol, begin_index=begin_index, end_index=end_index,
+            limit=limit)
+
+    return call_api(func, 0.5, 0)

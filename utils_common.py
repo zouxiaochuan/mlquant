@@ -1,7 +1,9 @@
 import uuid
+import json
 import datetime
 import numpy as np
 from collections import deque
+import pytz
 
 
 def get_temp_name(prefix='temp'):
@@ -16,6 +18,14 @@ def file2list(filename):
             pass
         pass
     return ret
+
+
+def load_json(filename):
+    with open(filename) as fin:
+        s = fin.read()
+        pass
+
+    return json.loads(s)
 
 
 def dt_add(dt, days):
@@ -37,6 +47,11 @@ def dt_diff(dt1, dt2):
     date1 = datetime.datetime.strptime(dt1, '%Y-%m-%d')
     date2 = datetime.datetime.strptime(dt2, '%Y-%m-%d')
     return (date1-date2).days
+
+
+def get_current_dt_us():
+    return datetime.datetime.strftime(datetime.datetime.now().astimezone(
+        pytz.timezone('US/Eastern')), '%Y-%m-%d')
 
 
 def get_current_dt():
