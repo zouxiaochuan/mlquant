@@ -58,6 +58,12 @@ def get_current_dt():
     return datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d')
 
 
+def ms2dt_us(ts):
+    dt = datetime.datetime.fromtimestamp(ts * 0.001)
+    dt = dt.astimezone(pytz.timezone('US/Eastern'))
+    return dt.strftime('%Y-%m-%d')
+
+
 def min_sum_sublist(alist):
     best = cur = 0
     for v in alist:

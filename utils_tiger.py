@@ -116,8 +116,8 @@ def get_trade_ticks(
         symbols: list,
         limit: int):
 
-    def func(): g_quote_client.get_trade_ticks(
-            symbols, limit=limit)
+    def func(): return g_quote_client.get_trade_ticks(
+            symbols, begin_index=None, end_index=None, limit=limit)
 
     return call_api(func, 0.5, 0)
 
@@ -128,7 +128,7 @@ def get_future_trade_ticks(
         end_index: int,
         limit: int):
 
-    def func(): g_quote_client.get_future_trade_ticks(
+    def func(): return g_quote_client.get_future_trade_ticks(
             symbol, begin_index=begin_index, end_index=end_index,
             limit=limit)
 
