@@ -23,7 +23,7 @@ def download_stock_ticks(
         if not isinstance(df, pd.DataFrame):
             continue
 
-        df['dt'] = utils_common.get_current_dt()
+        df['dt'] = df['time'].map(utils_common.ms2dt_us_market)
 
         logger.debug('download stock ticks: ' + str(df.shape[0]))
 
@@ -55,12 +55,14 @@ def download_future_ticks(
         conn: Type[sqlite3.Connection]):
 
     cdt = utils_common.get_current_dt_us()
+    print(cdt)
+
     for s in symbols:
         last_index = get_future_tick_last_index(
             s,
             cdt,
             conn)
-        
+
         begin_index = max(0, last_index - 500)
         end_index = begin_index + 1000
 
@@ -76,7 +78,7 @@ def download_future_ticks(
         if not isinstance(df, pd.DataFrame):
             continue
 
-        df['dt'] = utils_common.get_current_dt_us()
+        df['dt'] = df['time'].map(utils_common.ms2dt_us_market)
 
         logger.debug('download future tick:' + str(df.shape[0]))
 

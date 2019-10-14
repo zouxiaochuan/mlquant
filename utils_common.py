@@ -64,6 +64,15 @@ def ms2dt_us(ts):
     return dt.strftime('%Y-%m-%d')
 
 
+def ms2dt_us_market(ts):
+    dt = datetime.datetime.fromtimestamp(ts * 0.001)
+    dt = dt.astimezone(pytz.timezone('US/Eastern'))
+    if dt.hour >= 18:
+        dt += datetime.timedelta(days=1)
+        pass
+    return dt.strftime('%Y-%m-%d')
+
+
 def min_sum_sublist(alist):
     best = cur = 0
     for v in alist:
