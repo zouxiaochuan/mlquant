@@ -12,7 +12,7 @@ import sqlite3
 # NGmain,5003,1570800036000,2.218,2
 
 
-def create_sqlite(dbfile):
+def create_ticks(dbfile):
     conn = sqlite3.connect(dbfile)
     conn.executescript('''
     DROP TABLE IF EXISTS stock_ticks;
@@ -48,6 +48,36 @@ def create_sqlite(dbfile):
     pass
 
 
+# symbol           time  price  avg_price  pre_close  volume trading_session
+# UGAZ  1571040000000  13.11   13.11000      13.11       0      pre_market
+# UGAZ  1571040060000  13.11   13.11000      13.11       0      pre_market
+# UGAZ  1571040120000  13.67   13.67000      13.11     139      pre_market
+# UGAZ  1571040180000  13.64   13.64366      13.11    1000      pre_market
+# UGAZ  1571040240000  13.65   13.64483      13.11     257      pre_market
+# UGAZ  1571040300000  13.62   13.64096      13.11     456      pre_market
+
+def create_stock_minutes(dbfile):
+    conn = sqlite3.connect(dbfile)
+    conn.executescript('''
+    DROP TABLE IF EXISTS stock_minutes;
+    CREATE TABLE stock_minutes(
+      symbol TEXT,
+      time INTEGER,
+      price REAL,
+      avg_price REAL,
+      pre_close REAL,
+      volume INTEGER,
+      trading_session TEXT,
+      dt TEXT,
+      UNIQUE(symbol, time)
+    );
+    CREATE INDEX index_stock_minutes ON
+      stock_minutes(symbol, time)
+    ''')
+    conn.commit()
+    pass
+
+
 if __name__ == '__main__':
-    create_sqlite('sqlite.db')
+    create_stock_minutes('sqlite.db')
     pass

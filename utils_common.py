@@ -54,8 +54,8 @@ def get_current_dt_us():
         pytz.timezone('US/Eastern')), '%Y-%m-%d')
 
 
-def get_current_dt_us_market():
-    dt =  datetime.datetime.now().astimezone(
+def get_current_dt_us_future():
+    dt = datetime.datetime.now().astimezone(
         pytz.timezone('US/Eastern'))
 
     if dt.hour >= 18:
@@ -75,12 +75,18 @@ def ms2dt_us(ts):
     return dt.strftime('%Y-%m-%d')
 
 
-def ms2dt_us_market(ts):
+def ms2dt_us_future(ts):
     dt = datetime.datetime.fromtimestamp(ts * 0.001)
     dt = dt.astimezone(pytz.timezone('US/Eastern'))
     if dt.hour >= 18:
         dt += datetime.timedelta(days=1)
         pass
+    return dt.strftime('%Y-%m-%d')
+
+
+def ms2dt_us_stock(ts):
+    dt = datetime.datetime.fromtimestamp(ts * 0.001)
+    dt = dt.astimezone(pytz.timezone('US/Eastern'))
     return dt.strftime('%Y-%m-%d')
 
 
