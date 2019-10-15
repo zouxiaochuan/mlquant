@@ -54,6 +54,17 @@ def get_current_dt_us():
         pytz.timezone('US/Eastern')), '%Y-%m-%d')
 
 
+def get_current_dt_us_market():
+    dt =  datetime.datetime.now().astimezone(
+        pytz.timezone('US/Eastern'))
+
+    if dt.hour >= 18:
+        dt += datetime.timedelta(days=1)
+        pass
+
+    return dt.strftime('%Y-%m-%d')
+
+
 def get_current_dt():
     return datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d')
 

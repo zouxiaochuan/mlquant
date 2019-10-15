@@ -54,7 +54,7 @@ def download_future_ticks(
         symbols: list,
         conn: Type[sqlite3.Connection]):
 
-    cdt = utils_common.get_current_dt_us()
+    cdt = utils_common.get_current_dt_us_market()
     print(cdt)
 
     for s in symbols:
