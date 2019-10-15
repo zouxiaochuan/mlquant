@@ -90,6 +90,26 @@ def download_future_ticks(
     pass
 
 
+def download_stock_minutes(
+        symbols: list,
+        conn: Type[sqlite3.Connection]):
+
+    for ss in (symbols[i:i+50] for i in range(0, len(symbols), 50)):
+        df: pd.DataFrame = utils_tiger.get_timeline(
+            ss)
+
+        if not isinstance(df, pd.DataFrame):
+            continue
+
+        df['dt'] = df['time'].map(utils_common.ms2dt_us_market)
+
+        logger.debug('download stock minutes: ' + str(df.shape[0]))
+
+        utils_sqlite.insert_data(df, 'stock_minutes', conn)
+        pass
+    pass
+
+
 def download_loop():
     stocks = utils_common.file2list('stocks.txt')
     futures = utils_common.file2list('futures.txt')
@@ -102,6 +122,8 @@ def download_loop():
             stocks, conn)
         download_future_ticks(
             futures, conn)
+        download_stock_minutes(
+            stocks, conn)
         time.sleep(1)
         pass
     pass
