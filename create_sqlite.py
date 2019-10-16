@@ -78,6 +78,35 @@ def create_stock_minutes(dbfile):
     pass
 
 
+# identifier,time,latest_time,open,high,low,close,settlement,volume,open_interest
+# NGmain,1571198580000,1571198588000,2.339,2.339,2.339,2.339,0.0,1,0
+# NGmain,1571198520000,1571198561000,2.34,2.34,2.34,2.34,0.0,3,0
+
+def create_future_minutes(dbfile):
+    conn = sqlite3.connect(dbfile)
+    conn.executescript('''
+    DROP TABLE IF EXISTS future_minutes;
+    CREATE TABLE future_minutes(
+      identifier TEXT,
+      time INTEGER,
+      latest_time INTEGER,
+      open REAL,
+      high REAL,
+      low REAL,
+      close REAL,
+      settlement REAL,
+      volume INTEGER,
+      open_interest INTEGER,
+      dt TEXT,
+      UNIQUE(identifier, time)
+    );
+    CREATE INDEX index_future_minutes ON
+      future_minutes(identifier, time)
+    ''')
+    conn.commit()
+    pass
+
+
 if __name__ == '__main__':
-    create_stock_minutes('sqlite.db')
+    create_future_minutes('sqlite.db')
     pass

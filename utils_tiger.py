@@ -60,21 +60,20 @@ def get_push_client(config: dict) -> Type[PushClient]:
     return push_client
 
 
-def get_bars(
-        quote_client: QuoteClient,
-        symbols: list,
-        begin_time: int,
-        end_time: int):
+def get_future_bars_minute(
+        identifiers: list,
+        begin_time: int = -1,
+        end_time: int = -1,
+        limit: int = 1000):
 
-    def func(): return g_quote_client.get_bars(
-            symbols)
-    return quote_client.get_bars(
-        symbols=symbols,
-        period=tiger_consts.BarPeriod.ONE_MINUTE,
-        begin_time=begin_time,
-        end_time=end_time,
-        right=tiger_consts.QuoteRight.BR,
-        limit=600)
+    def func(): return g_quote_client.get_future_bars(
+            identifiers,
+            period=tiger_consts.BarPeriod.ONE_MINUTE,
+            begin_time=begin_time,
+            end_time=end_time,
+            limit=limit)
+
+    return call_api(func, 3, 0)
 
 
 def get_bars_minute_dt(
