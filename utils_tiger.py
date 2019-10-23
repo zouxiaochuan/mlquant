@@ -126,10 +126,12 @@ def get_bars_minute_month(
 
 def get_trade_ticks(
         symbols: list,
-        limit: int):
+        limit: int,
+        begin_index: int = None,
+        end_index: int = None):
 
     def func(): return g_quote_client.get_trade_ticks(
-            symbols, begin_index=None, end_index=None, limit=limit)
+            symbols, begin_index=begin_index, end_index=end_index, limit=limit)
 
     return call_api(func, 0.5, 0)
 
