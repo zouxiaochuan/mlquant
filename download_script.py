@@ -7,15 +7,24 @@ import logging
 
 if __name__ == '__main__':
     utils_log.setLevel(logging.DEBUG)
-    proc_high = multiprocessing.Process(
-        target=download_data_high_frequency.download_loop)
-    proc_low = multiprocessing.Process(
-        target=download_data_low_frequency.download_loop)
+    logger = utils_log.console
 
-    proc_high.start()
-    proc_low.start()
+    proc_high = None
+    proc_low = None
 
-    proc_high.join()
-    proc_low.join()
+    while True:
+        if proc_high is None or not proc_high.is_alive():
+            logger.info('restart proc_high')
+            proc_high = multiprocessing.Process(
+                target=download_data_high_frequency.download_loop)
+            proc_high.start()
+            pass
+        if proc_low is None or not proc_low.is_alive():
+            logger.info('restart proc_low')
+            proc_low = multiprocessing.Process(
+                target=download_data_low_frequency.download_loop)
+            proc_low.start()
+            pass
+        pass
 
     pass
