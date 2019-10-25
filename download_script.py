@@ -3,6 +3,7 @@ import download_data_low_frequency
 import multiprocessing
 import utils_log
 import logging
+import time
 
 
 if __name__ == '__main__':
@@ -25,6 +26,8 @@ if __name__ == '__main__':
                 target=download_data_low_frequency.download_loop)
             proc_low.start()
             pass
+
+        time.sleep(30)
         pass
 
     pass
