@@ -6,34 +6,40 @@ import time
 
 
 if __name__ == '__main__':
-    start_dt = sys.argv[1]
-    end_dt = sys.argv[2]
+    rootpath = sys.argv[1]
+    start_dt = sys.argv[2]
+    end_dt = sys.argv[3]
 
     symbols = []
 
-    with open('symbols.txt') as fin:
-        for line in fin:
-            symbols.append(line.strip())
-            pass
-        pass
+    stocks = utils_common.file2list(os.path.join(rootpath, 'stocks.txt'))
+    futures = utils_common.file2list(os.path.join(rootpath, 'futures.txt'))
+
+    symbols = stocks + futures
+    is_futures = [False for _ in stocks] + [True for _ in futures]
 
     dt = end_dt
     conn = utils_iqfeed.get_conn()
 
     while dt >= start_dt:
-        for symbol in symbols:
-            if not os.path.exists(symbol):
-                os.makedirs(symbol)
+        for symbol,is_future in zip(symbols, is_futures):
+            filedir = os.path.join(rootpath, symbol)
+            if not os.path.exists(filedir):
+                os.makedirs(filedir)
                 time.sleep(1)
                 pass
 
-            filepath = os.path.join(symbol, dt+'.csv')
+            filepath = os.path.join(rootpath, symbol, dt+'.csv')
             print(filepath)
             
             if os.path.exists(filepath):
                 continue
 
-            df = utils_iqfeed.get_tick_dt(symbol, dt, conn)
+            if not is_future:
+                df = utils_iqfeed.get_stock_tick_dt(symbol, dt, conn)
+            else:
+                df = utils_iqfeed.get_future_tick_dt(symbol, dt, conn)
+                pass
 
             if df is None:
                 continue

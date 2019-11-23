@@ -6,9 +6,9 @@ if __name__ == '__main__':
     df: pd.DataFrame
     sock = utils_iqfeed.get_conn()
 
-    df = utils_iqfeed.get_tick_dt(
-        'UGAZ',
-        '2019-11-18',
+    df = utils_iqfeed.get_future_tick_dt(
+        'QNG#',
+        '2019-11-22',
         sock)
 
     print(df.head(10))

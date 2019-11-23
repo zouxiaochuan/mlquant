@@ -5,55 +5,11 @@ from io import BytesIO
 import pandas as pd
 from typing import Type, Tuple
 import socket
+import utils_common
 
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 9100
-
-
-async def get_tick_dt_(
-        symbol: str,
-        dt: str) -> pd.DataFrame:
-    current_dt = datetime.now().astimezone(pytz.timezone('US/Eastern'))
-    current_dt = current_dt.replace(tzinfo=None)
-    dt_ = datetime.strptime(dt, '%Y-%m-%d')
-    num_days = (current_dt - dt_).days + 1
-
-    if num_days < 1:
-        raise RuntimeError('num_days less than 1: ' + str(num_days))
-
-    reader: asyncio.StreamReader
-    writer: asyncio.StreamWriter
-    reader, writer = await asyncio.open_connection(
-        DEFAULT_HOST, DEFAULT_PORT)
-
-    writer.write('HTD,{Symbol},{MaxDays},,,,,\r\n'.format(
-        Symbol=symbol, MaxDays=num_days).encode('utf8'))
-
-    await writer.drain()
-
-    outfile = BytesIO()
-    while True:
-        line: bytes
-        line = await reader.readline()
-        if line.startswith(b'E'):
-            raise RuntimeError(line.decode('utf8'))
-            pass
-
-        if b'!ENDMSG!' in line:
-            break
-
-        line = line[:-3] + b'\r\n'
-        outfile.write(line)
-        pass
-
-    writer.close()
-    await writer.wait_closed()
-
-    df = pd.read_csv(BytesIO(outfile.getvalue()), header=None, index_col=None)
-
-    return df
-    pass
 
 
 def get_conn() -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
@@ -90,7 +46,7 @@ def get_df(
     return df
 
 
-def get_tick_dt(
+def get_stock_tick_dt(
         symbol: str,
         dt: str,
         sock: socket.socket) -> Type[pd.DataFrame]:
@@ -103,4 +59,24 @@ def get_tick_dt(
     return get_df(
         command,
         sock)
-    pass
+
+def get_future_tick_dt(
+        symbol: str,
+        dt: str,
+        sock: socket.socket) -> Type[pd.DataFrame]:
+
+    pre_dt = utils_common.dt_add(dt, -1)
+    
+    dt = dt.replace('-', '')
+    pre_dt = pre_dt.replace('-', '')
+    
+    command = 'HTT,{Symbol},{BeginTime},{EndTime}\r\n'.format(
+        Symbol=symbol, BeginTime=pre_dt+' 180000',
+        EndTime=dt+' 170000').encode('ascii')
+
+    return get_df(
+        command,
+        sock)
+
+
+
