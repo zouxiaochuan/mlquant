@@ -1,9 +1,14 @@
+import os
 import uuid
 import json
 import datetime
 import numpy as np
 from collections import deque
 import pytz
+import pickle
+import sys
+import inspect
+import importlib
 
 
 def get_temp_name(prefix='temp'):
@@ -19,6 +24,39 @@ def file2list(filename):
         pass
     return ret
 
+
+def import_path_and_get_classes(path):
+    if path not in sys.path:
+        sys.path.append(path)
+        pass
+    
+    filenames = os.listdir(path)
+    for filename in filenames:
+        if not filename.endswith('.py'):
+            continue
+        
+        module_name = os.path.splitext(filename)[0]
+        mod = importlib.import_module(module_name)
+        
+        for name, cls in mod.__dict__.items():
+            if not inspect.isclass(cls):
+                continue
+            
+            yield cls
+            pass
+        pass
+    pass
+
+def loadobj(filename):
+    with open(filename, 'rb') as fin:
+        return pickle.load(fin)
+    pass
+
+def dumpobj(filename, obj):
+    with open(filename, 'wb') as fout:
+        pickle.dump(obj, fout, protocol=pickle.HIGHEST_PROTOCOL)
+        pass
+    pass
 
 def load_json(filename):
     with open(filename) as fin:
@@ -47,6 +85,18 @@ def dt_diff(dt1, dt2):
     date1 = datetime.datetime.strptime(dt1, '%Y-%m-%d')
     date2 = datetime.datetime.strptime(dt2, '%Y-%m-%d')
     return (date1-date2).days
+
+
+def ts_diff(ts1, ts2):
+    date1 = datetime.datetime.strptime(ts1, '%Y-%m-%d %H:%M:%S')
+    date2 = datetime.datetime.strptime(ts2, '%Y-%m-%d %H:%M:%S')
+    return (date1-date2).seconds
+
+
+def ts_add(ts, seconds):
+    date = datetime.datetime.strptime(ts, '%Y-%m-%d %H:%M:%S')
+    date = date + datetime.timedelta(seconds=seconds)
+    return date.strftime('%Y-%m-%d %H:%M:%S')
 
 
 def get_current_dt_us():

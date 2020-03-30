@@ -22,6 +22,12 @@ utils_tiger.set_config(config)
 # df.to_csv('temp.csv', index=False)
 
 push_client = utils_tiger.get_push_client(config)
+quote_client = utils_tiger.get_quote_client(config)
+
+class MyClass(object):
+    def on_quote_change(self, *args):
+        print(args)
+        pass
 
 def on_quote_change(*args):
     print(args)
@@ -37,14 +43,16 @@ def on_disconnect():
         pass
     pass
 
-
+myobj = MyClass()
 push_client.quote_changed = on_quote_change
 push_client.disconnect_callback = on_disconnect
 
-push_client.unsubscribe_quote(['UGAZ','CLmain','NGmain'])
 push_client.subscribe_quote(
-    ['UGAZ'], utils_tiger.tiger_consts.QuoteKeyType.ALL)
+    ['CLmain','SPY'], utils_tiger.tiger_consts.QuoteKeyType.ALL)
+time.sleep(60)
 
-time.sleep(15*60)
+push_client.unsubscribe_quote(['SPY', 'UGAZ','CLmain','NGmain'])
 
 push_client.disconnect()
+
+#print(utils_tiger.get_bars_minute_dt(quote_client, ['UGAZ'], '2020-03-19'))

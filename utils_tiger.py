@@ -40,7 +40,13 @@ def get_client_config(config: dict) -> Type[TigerOpenClientConfig]:
     return client_config
 
 
-def get_quote_client(config: dict) -> Type[QuoteClient]:
+def get_quote_client(config: dict = None) -> Type[QuoteClient]:
+    global g_config
+    
+    if config is None:
+        config = g_config
+        pass
+    
     return QuoteClient(get_client_config(config))
 
 
@@ -51,7 +57,13 @@ def set_config(config: dict):
     g_quote_client = get_quote_client(config)
 
 
-def get_push_client(config: dict) -> Type[PushClient]:
+def get_push_client(config: dict = None) -> Type[PushClient]:
+    global g_config
+    
+    if config is None:
+        config = g_config
+        pass
+
     client_config = get_client_config(config)
     protocol, host, port = client_config.socket_host_port
     push_client = PushClient(host, port, use_ssl=(protocol == 'ssl'))
