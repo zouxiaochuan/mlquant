@@ -14,8 +14,11 @@ import factor_manager
 
 engine_instance = None
 
+
 def unsubscribe_on_exit():
     engine_instance.unsubscribe()
+    pass
+
 
 def on_tick(tick: base_classes.DataTick):
     engine_instance.on_datafeed_tick(tick)
@@ -25,11 +28,14 @@ def on_tick(tick: base_classes.DataTick):
 def generate_tick_second(que: queue.Queue):
     while True:
         ts = int(time.time()*1000)
-        tick = base_classes.DataTick(None, None, None, None, ts, None, None, None, None, None)
+
+        tick = base_classes.DataTick(
+            None, None, None, None, ts, None, None, None, None, None, None)
         que.put(tick)
         time.sleep(1 - time.time() % 1)
         pass
     pass
+
 
 class EngineOnline(base_classes.EngineBase):
     def __init__(self,
@@ -48,7 +54,7 @@ class EngineOnline(base_classes.EngineBase):
         self._bar_merger.set_on_bar(self.on_bar)
         self._queue_datafeed = queue.Queue()
         self._factor_manager = factor_manager.FactorManager()
-        
+
         # load strategies
         self._strategies = self.load_strategies(self._path_strategies)
 
@@ -56,13 +62,12 @@ class EngineOnline(base_classes.EngineBase):
         self._factor_manager.load_factors(self._strategies)
         self._symbols = list(self._factor_manager.get_symbols())
 
-        
         engine_instance = self
         pass
 
     def load_strategies(self, pathes: list):
         strategies = list()
-        
+
         for path in pathes:
             for cls in utils_common.import_path_and_get_classes(path):
                 if issubclass(cls, base_classes.StrategyBase):
@@ -72,13 +77,14 @@ class EngineOnline(base_classes.EngineBase):
             pass
         return strategies
 
-    
     def start(self):
         self._data_feed.subscribe(self._symbols)
         atexit.register(unsubscribe_on_exit)
-        
+
         self._data_feed.set_on_tick(on_tick)
-        threading.Thread(target=generate_tick_second, args=(self._queue_datafeed,)).start()
+        threading.Thread(
+            target=generate_tick_second,
+            args=(self._queue_datafeed,)).start()
 
         while True:
             tick = self._queue_datafeed.get()
@@ -86,37 +92,42 @@ class EngineOnline(base_classes.EngineBase):
             pass
         pass
 
-
     def unsubscribe(self):
         self._data_feed.unsubscribe(self._symbols)
         pass
-        
+
     def on_datafeed_tick(self, tick: base_classes.DataTick):
         self._queue_datafeed.put(tick)
-        self._data_manager.put_tick(tick)
         pass
 
     def on_bar_tick(self, tick: base_classes.DataTick):
+        print('{0},{1}'.format(time.time(), tick))
+        self._data_manager.put_tick(tick)
         self._data_manager.cache_tick(tick)
-        
+
         for i, strategy in enumerate(self._strategies):
             if tick._symbol in strategy._symbols:
-                strategy.on_tick(tick, self._factor_manager.get_strategy_factor_values(i))
+                strategy.on_tick(
+                    tick, self._factor_manager.get_strategy_factor_values(i))
                 pass
             pass
         pass
 
     def on_bar(self, period: int, bars: List[base_classes.DataBar]):
+        for bar in bars:
+            print('{0},{1}'.format(time.time(), str(bar)))
+            pass
+
         self._data_manager.put_bars(bars)
-        
+
         if period == 1:
             # update factors every seconds
             self._factor_manager.update_factor_values()
             pass
 
         for i, strategy in enumerate(self._strategies):
-            strategy.on_bar(period, self._factor_manager.get_strategy_factor_values(i))
+            strategy.on_bar(
+                period, self._factor_manager.get_strategy_factor_values(i))
             pass
         pass
     pass
-

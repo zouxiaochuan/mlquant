@@ -1,4 +1,7 @@
+import os
+import time
 import sqlite3
+from typing import List
 import base_classes
 
 
@@ -6,13 +9,17 @@ class DataManagerSqliteOnline(base_classes.DataManagerBase):
     def __init__(self, data_path):
         super().__init__()
         self._data_path = data_path
+        os.makedirs(data_path, exist_ok=True)
+
         self._path_tick = os.path.join(self._data_path, 'table_tick.sqlite')
         self._path_bar = os.path.join(self._data_path, 'table_bar.sqlite')
-        self.init_connection()
 
-        tick_columns = base_classes.DataTick.columns + ('insert_time',)
-        bar_columns = base_classes.DataBar.columns + ('insert_time',)
-        
+        self.init_connection()
+        self.init_data()
+
+        tick_columns = base_classes.DataTick.columns()
+        bar_columns = base_classes.DataBar.columns()
+
         self._sql_insert_tick = '''
         INSERT INTO table_tick({0}) VALUES({1})
         '''.format(','.join(tick_columns),
@@ -33,7 +40,7 @@ class DataManagerSqliteOnline(base_classes.DataManagerBase):
         CREATE TABLE IF NOT EXISTS table_tick(
           symbol TEXT,
           timestamp BIGINT,
-          day_order BIGINT,
+          seq_num BIGINT,
           price REAL,
           volume BIGINT,
           total_volume BIGINT,
@@ -41,8 +48,8 @@ class DataManagerSqliteOnline(base_classes.DataManagerBase):
           ask_size BIGINT,
           bid_price REAL,
           bid_size BIGINT,
-          insert_time REAL,
-          UNIQUE(symbol, timestamp, day_order)
+          server_time BIGINT,
+          UNIQUE(symbol, timestamp, seq_num)
         );
         '''
         self._conn_tick.execute(sqlcmd)
@@ -60,7 +67,6 @@ class DataManagerSqliteOnline(base_classes.DataManagerBase):
           average REAL,
           volume BIGINT,
           total_volume BIGINT,
-          insert_time REAL,
           UNIQUE(symbol, timestamp, period)
         );
         '''
@@ -71,14 +77,14 @@ class DataManagerSqliteOnline(base_classes.DataManagerBase):
     def put_tick(self, tick: base_classes.DataTick):
         self._conn_tick.execute(
             self._sql_insert_tick,
-            tick.data() + (time.time(),))
+            tick.data())
         self._conn_tick.commit()
         pass
 
-    def put_bars(self, bars: List[DataBar]):
+    def put_bars(self, bars: List[base_classes.DataBar]):
         self._conn_bar.executemany(
             self._sql_insert_bar,
-            (bar.data() + (time.time(),) for bar in bars))
+            (bar.data() for bar in bars))
         self._conn_bar.commit()
         pass
     pass

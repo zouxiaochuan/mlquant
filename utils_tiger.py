@@ -42,11 +42,11 @@ def get_client_config(config: dict) -> Type[TigerOpenClientConfig]:
 
 def get_quote_client(config: dict = None) -> Type[QuoteClient]:
     global g_config
-    
+
     if config is None:
         config = g_config
         pass
-    
+
     return QuoteClient(get_client_config(config))
 
 
@@ -59,7 +59,7 @@ def set_config(config: dict):
 
 def get_push_client(config: dict = None) -> Type[PushClient]:
     global g_config
-    
+
     if config is None:
         config = g_config
         pass

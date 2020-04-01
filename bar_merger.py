@@ -10,22 +10,23 @@ class BarMerger(object):
         self._on_bar = None
 
         self._merge_periods = [1000, 5000, 60*1000]
-        self._buffers = [collections.defaultdict(list) for _ in self._merge_periods]
-        self._last_ts = int(time.time())
+        self._buffers = [collections.defaultdict(list) for _ in
+                         self._merge_periods]
+        self._last_ts = int(time.time() * 1000)
         pass
-
 
     def put_tick(self, tick: DataTick):
         ts = tick._timestamp
+        last_ts = self._last_ts
 
         bars_list = []
-        for ibuf, (period, buf) in enumerate(zip(self._merge_periods, self._buffers)):
-            ts_bar = (ts // period) * period
-            ts_bar_last = (self._last_ts // period) * period
+        for ibuf, (period, buf) in enumerate(
+                zip(self._merge_periods, self._buffers)):
+            ts_bar_current = (ts // period) * period
+            ts_bar = (last_ts // period + 1) * period
 
-            bars = []
-            # print('ts_bar:{0},ts_bar_last:{1}'.format(ts_bar, ts_bar_last))
-            if  ts_bar > ts_bar_last:
+            if ts_bar_current >= ts_bar:
+                bars = []
                 for symbol, buffered_bars in buf.items():
                     bar = self.merge_bars(ts_bar, period, buffered_bars)
                     if bar is not None:
@@ -36,35 +37,37 @@ class BarMerger(object):
                             pass
                         pass
                     pass
-                bars_list.append(bars)
+                if len(bars) > 0:
+                    bars_list.append((period, bars))
+                    pass
                 pass
             pass
-        
 
         if tick._symbol is not None:
-            self._buffers[0][tick._symbol].append(self.tick2bar(tick))
+            if tick._volume > 0:
+                self._buffers[0][tick._symbol].append(self.tick2bar(tick))
+                pass
+
+            # triger event
+            self._on_tick(tick)
             pass
 
-        # triger event
-        self._on_tick(tick)
-
-        for period, bars in zip(self._merge_periods, bars_list):
-            if len(bars) > 0:
-                self._on_bar(period, bars)
-                pass
+        for period, bars in bars_list:
+            self._on_bar(period, bars)
             pass
 
         self._last_ts = ts
         pass
 
     def tick2bar(self, tick: DataTick) -> DataBar:
-        return DataBar(tick._symbol, tick._timestamp, -1, tick._price, tick._price,
-                       tick._price, tick._price, tick._price, tick._volume, tick._total_volume)
+        return DataBar(tick._symbol, tick._timestamp, -1, tick._price,
+                       tick._price, tick._price, tick._price, tick._price,
+                       tick._volume, tick._total_volume)
 
     def merge_bars(self, timestamp, period, bars: List[DataBar]) -> DataBar:
         if len(bars) == 0:
             return None
-        
+
         symbol = bars[0]._symbol
         first = bars[0]._first
         last = bars[-1]._last
@@ -77,7 +80,7 @@ class BarMerger(object):
 
         return DataBar(symbol, timestamp, period, first, last, high, low,
                        average, volume, total_volume)
-    
+
     def set_on_tick(self, callback):
         self._on_tick = callback
 
