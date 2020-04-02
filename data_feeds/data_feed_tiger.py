@@ -87,6 +87,9 @@ class DataFeedTiger(base_classes.DataFeedBase):
                     # first entry, maybe middle of the day
                     tick._volume = 1
                     pass
+                elif last_vol > value:
+                    tick._volume = value
+                    pass
                 else:
                     tick._volume = value - last_vol
                     pass
