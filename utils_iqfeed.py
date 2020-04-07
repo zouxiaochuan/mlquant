@@ -86,16 +86,17 @@ def get_stock_tick_dt(
         command,
         sock)
 
+
 def get_future_tick_dt(
         symbol: str,
         dt: str,
         sock: socket.socket) -> Type[pd.DataFrame]:
 
     pre_dt = utils_common.dt_add(dt, -1)
-    
+
     dt = dt.replace('-', '')
     pre_dt = pre_dt.replace('-', '')
-    
+
     command = 'HTT,{Symbol},{BeginTime},{EndTime}\r\n'.format(
         Symbol=symbol, BeginTime=pre_dt+' 180000',
         EndTime=dt+' 170500').encode('ascii')
@@ -112,7 +113,7 @@ def get_daily(
         sock: socket.socket) -> Type[pd.DataFrame]:
 
     command = 'HDT,{symbol},{begin_date},{end_date},,,,\r\n'.format(
-        symbol=symbol,begin_date=dt_start.replace('-', ''),
+        symbol=symbol, begin_date=dt_start.replace('-', ''),
         end_date=dt_end.replace('-', '')).encode('ascii')
 
     return get_df(command, sock)

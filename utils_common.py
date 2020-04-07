@@ -47,16 +47,19 @@ def import_path_and_get_classes(path):
         pass
     pass
 
+
 def loadobj(filename):
     with open(filename, 'rb') as fin:
         return pickle.load(fin)
     pass
+
 
 def dumpobj(filename, obj):
     with open(filename, 'wb') as fout:
         pickle.dump(obj, fout, protocol=pickle.HIGHEST_PROTOCOL)
         pass
     pass
+
 
 def load_json(filename):
     with open(filename) as fin:
@@ -104,6 +107,10 @@ def get_current_dt_us():
         pytz.timezone('US/Eastern')), '%Y-%m-%d')
 
 
+def get_current_time_us() -> datetime.datetime:
+    return datetime.datetime.now().astimezone(pytz.timezone('US/Eastern'))
+
+
 def get_current_dt_us_future():
     dt = datetime.datetime.now().astimezone(
         pytz.timezone('US/Eastern'))
@@ -123,6 +130,11 @@ def ms2dt_us(ts):
     dt = datetime.datetime.fromtimestamp(ts * 0.001)
     dt = dt.astimezone(pytz.timezone('US/Eastern'))
     return dt.strftime('%Y-%m-%d')
+
+
+def ms2datetime_us(ms):
+    return datetime.datetime.fromtimestamp(ms * 0.001).astimezone(
+        pytz.timezone('US/Eastern'))
 
 
 def ms2dt_us_future(ts):
