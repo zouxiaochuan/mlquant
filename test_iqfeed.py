@@ -7,14 +7,15 @@ if __name__ == '__main__':
     sock = utils_iqfeed.get_conn()
 
     df = utils_iqfeed.get_stock_bar_dt(
-        'UGAZ',
-        '2018-12-06',
+        'QCL#',
+        '2020-04-22',
         60,
         sock)
 
-    # df = utils_iqfeed.get_stock_tick_dt(
-    #     'UGAZ',
-    #     '2020-02-28',
+    # df = utils_iqfeed.get_daily(
+    #     'QCLK20',
+    #     '2008-01-01',
+    #     '2020-05-01',
     #     sock)
     
 

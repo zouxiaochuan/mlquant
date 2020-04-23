@@ -6,6 +6,7 @@ import threading
 import atexit
 from typing import List
 import time
+import datetime
 
 import base_classes
 import utils_common
@@ -22,18 +23,6 @@ def unsubscribe_on_exit():
 
 def on_tick(tick: base_classes.DataTick):
     engine_instance.on_datafeed_tick(tick)
-    pass
-
-
-def generate_tick_second(que: queue.Queue):
-    while True:
-        ts = int(time.time()*1000)
-
-        tick = base_classes.DataTick(
-            None, None, None, None, ts, None, None, None, None, None, None)
-        que.put(tick)
-        time.sleep(1 - time.time() % 1)
-        pass
     pass
 
 
@@ -54,6 +43,8 @@ class EngineOnline(base_classes.EngineBase):
         self._bar_merger.set_on_bar(self.on_bar)
         self._queue_datafeed = queue.Queue()
         self._factor_manager = factor_manager.FactorManager()
+        self._last_tick_ts = int(time.time() * 1000)
+        self._mutex = threading.Lock()
 
         # load strategies
         self._strategies = self.load_strategies(self._path_strategies)
@@ -78,13 +69,13 @@ class EngineOnline(base_classes.EngineBase):
         return strategies
 
     def start(self):
+        self._data_feed.set_on_tick(on_tick)
         self._data_feed.subscribe(self._symbols)
         atexit.register(unsubscribe_on_exit)
 
-        self._data_feed.set_on_tick(on_tick)
         threading.Thread(
             target=generate_tick_second,
-            args=(self._queue_datafeed,)).start()
+            args=(self,)).start()
 
         while True:
             tick = self._queue_datafeed.get()
@@ -98,10 +89,17 @@ class EngineOnline(base_classes.EngineBase):
 
     def on_datafeed_tick(self, tick: base_classes.DataTick):
         self._queue_datafeed.put(tick)
+
+        with self._mutex:
+            self._last_tick_ts = tick._timestamp
+            pass
         pass
 
     def on_bar_tick(self, tick: base_classes.DataTick):
-        print('{0},{1}'.format(time.time(), tick))
+        print('{0},{1}'.format(
+            datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), tick))
+        print('queue size: {0}'.format(self._queue_datafeed.qsize()))
+        
         self._data_manager.put_tick(tick)
         self._data_manager.cache_tick(tick)
 
@@ -129,5 +127,18 @@ class EngineOnline(base_classes.EngineBase):
             strategy.on_bar(
                 period, self._factor_manager.get_strategy_factor_values(i))
             pass
+        pass
+    pass
+
+
+def generate_tick_second(engine: EngineOnline):
+    while True:
+        ts = int(time.time()*1000)
+        if (ts - engine._last_tick_ts) > 100:
+            tick = base_classes.DataTick(
+                None, None, None, None, ts, None, None, None, None, None, None)
+            engine._queue_datafeed.put(tick)
+            pass
+        time.sleep(1 - time.time() % 1)
         pass
     pass

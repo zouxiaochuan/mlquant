@@ -132,6 +132,11 @@ def ms2dt_us(ts):
     return dt.strftime('%Y-%m-%d')
 
 
+def ms2dt(ts):
+    dt = datetime.datetime.fromtimestamp(ts * 0.001)
+    return dt.strftime('%Y-%m-%d')
+
+
 def ms2datetime_us(ms):
     return datetime.datetime.fromtimestamp(ms * 0.001).astimezone(
         pytz.timezone('US/Eastern'))

@@ -1,4 +1,5 @@
 from typing import List
+import copy
 
 
 class DataBase(object):
@@ -12,6 +13,9 @@ class DataBase(object):
 
     def data(self):
         return tuple(self.__dict__['_'+col] for col in self.columns())
+
+    def clone(self):
+        return copy.copy(self)
     pass
 
 
