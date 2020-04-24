@@ -22,7 +22,11 @@ symbols = [
     'AAPL',
     'BA',
     'UPRO',
-    'SPXU'
+    'SPXU',
+    'NVDA',
+    'NTES',
+    'BILI',
+    'USL'
 ]
 
 

@@ -96,9 +96,9 @@ class EngineOnline(base_classes.EngineBase):
         pass
 
     def on_bar_tick(self, tick: base_classes.DataTick):
-        print('{0},{1}'.format(
-            datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), tick))
-        print('queue size: {0}'.format(self._queue_datafeed.qsize()))
+        # print('{0},{1}'.format(
+        #     datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), tick))
+        # print('queue size: {0}'.format(self._queue_datafeed.qsize()))
         
         self._data_manager.put_tick(tick)
         self._data_manager.cache_tick(tick)
@@ -113,7 +113,8 @@ class EngineOnline(base_classes.EngineBase):
 
     def on_bar(self, period: int, bars: List[base_classes.DataBar]):
         for bar in bars:
-            print('{0},{1}'.format(time.time(), str(bar)))
+            print('{0},{1},{2}'.format(
+                time.time(), self._queue_datafeed.qsize(), str(bar)))
             pass
 
         self._data_manager.put_bars(bars)
@@ -133,12 +134,10 @@ class EngineOnline(base_classes.EngineBase):
 
 def generate_tick_second(engine: EngineOnline):
     while True:
-        ts = int(time.time()*1000)
-        if (ts - engine._last_tick_ts) > 100:
-            tick = base_classes.DataTick(
-                None, None, None, None, ts, None, None, None, None, None, None)
-            engine._queue_datafeed.put(tick)
-            pass
-        time.sleep(1 - time.time() % 1)
+        ts = int(time.time() * 1000)
+        tick = base_classes.DataTick(
+            None, None, None, None, ts, None, None, None, None, None, None)
+        engine._queue_datafeed.put(tick)
+        time.sleep((1000 - ts % 1000 + 100)/1000)
         pass
     pass
