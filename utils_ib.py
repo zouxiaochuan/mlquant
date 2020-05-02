@@ -320,6 +320,10 @@ def process_msg_queue(client: IBClient):
                 last_val = getattr(tick, attr)
                 if last_val == value:
                     continue
+
+                if tick_type == TickTypeEnum.VOLUME:
+                    value *= 100
+                    pass
                 
                 setattr(tick, attr, value)
 
@@ -329,7 +333,7 @@ def process_msg_queue(client: IBClient):
                     if tick_type == TickTypeEnum.VOLUME:
                         ts_diff = timestamp - ts
                         if ts_diff < 0.002:
-                            # time.sleep(0.002 - ts_diff)
+                            time.sleep(0.002 - ts_diff)
                             pass
 
                         cprice = check_price_in_queue(ts, q)
