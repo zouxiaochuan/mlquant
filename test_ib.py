@@ -12,6 +12,7 @@ from ibapi.common import TickAttrib
 from ibapi.common import TickAttribLast
 
 ignore_prefix = {'BID', 'ASK'}
+ignore_prefix = {}
 
 
 class IBWrapper(EWrapper):
@@ -45,11 +46,8 @@ class IBWrapper(EWrapper):
             if tickType.startswith(pf):
                 return
             pass
-
-        if tickType != 'LAST':
-            return
         
-        print('{0},{1},{2},{3}'.format(time.time(), 'tickPrice', tickType,
+        print('{0},{1},{2},{3},{4}'.format(time.time(), reqId, 'tickPrice', tickType,
                                        price))
         pass
     
@@ -66,7 +64,7 @@ class IBWrapper(EWrapper):
                 return
             pass
         
-        print('{0},{1},{2},{3}'.format(time.time(), 'tickSize', tickType, size))        
+        print('{0},{1},{2},{3},{4}'.format(time.time(), reqId, 'tickSize', tickType, size))        
         pass
     
     @iswrapper
@@ -80,7 +78,7 @@ class IBWrapper(EWrapper):
                 return
             pass
 
-        # print('{0},{1},{2}'.format('tickString', tickType, value))
+        print('{0},{1},{2},{3}'.format('tickString', reqId, tickType, value))
         pass
 
     @iswrapper
@@ -117,36 +115,39 @@ if __name__ == '__main__':
     client.connect('127.0.0.1', 4001, 1)
     # client.reqMatchingSymbols(211, 'CL')
     contract = Contract()
-    contract.symbol = 'USO'
+    contract.symbol = 'BABA'
     contract.currency = 'USD'
     contract.secType = 'STK'
     contract.exchange = 'SMART'
     # contract.primaryExchange = 'ARCA'
 
     contract2 = Contract()
-    contract2.symbol = 'SPY'
+    contract2.symbol = 'PDD'
     contract2.currency = 'USD'
     contract2.secType = 'STK'
     contract2.exchange = 'SMART'
-    contract2.primaryExchange = 'ARCA'
+    # contract2.primaryExchange = 'ARCA'
 
     contract3 = Contract()
-    contract3.symbol = 'CL'
+    contract3.symbol = 'BIDU'
     contract3.currency = 'USD'
-    contract3.secType = 'CONTFUT'
-    contract3.exchange = 'NYMEX'
-    # contract3.lastTradeDateOrContractMonth = '202005'
+    contract3.secType = 'STK'
+    contract3.exchange = 'SMART'
+    # contract3.lastTradeDateOrContractMonth = '202006'
 
     contract4 = Contract()
-    contract4.symbol = "EUR"
-    contract4.secType = "CASH"
-    contract4.currency = "GBP"
-    contract4.exchange = "IDEALPRO"
+    contract4.symbol = "JD"
+    contract4.currency = "USD"
+    contract4.secType = "STK"
+    contract4.exchange = "SMART"
     
-    # client.reqMktData(1001, contract3, '', False, False, [])
-    # client.reqMktData(1002, contract2, '', False, False, [])
+    client.reqMarketDataType(1)
+    client.reqMktData(1001, contract, '', False, False, [])
+    client.reqMktData(1002, contract2, '', False, False, [])
+    client.reqMktData(1003, contract3, '', False, False, [])
+    client.reqMktData(1004, contract4, '', False, False, [])
     # client.reqTickByTickData(1003, contract, 'Last', 0, False)
-    client.reqContractDetails(1004, contract3)
+    # client.reqContractDetails(10, contract)
     client.run()
 
     print('come to an end')
