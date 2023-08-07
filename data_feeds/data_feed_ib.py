@@ -5,19 +5,20 @@ import utils_ib
 class DataFeedIB(DataFeedBase):
     def __init__(self, client_id: int, ip='127.0.0.1', port=4001):
         super().__init__()
-        self._client = utils_ib.connect_client(client_id, ip, port)
+        self.client = utils_ib.IBClient()
+        self.client.connect(ip, port, client_id)
         pass
 
     def subscribe(self, symbols: list):
-        self._client.subscribe(symbols)
+        self.client.subscribe(symbols)
         pass
 
     def unsubscribe(self, symbols: list):
-        self._client.unsubscribe(symbols)
+        self.client.unsubscribe(symbols)
         pass
 
     def set_on_tick(self, callback):
-        self._client.set_on_tick(callback)
+        self.client.set_on_tick(callback)
         pass
 
 

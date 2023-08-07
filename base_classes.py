@@ -2,7 +2,7 @@ from typing import List
 import copy
 
 
-class DataBase(object):
+class DataRecord(object):
 
     def __str__(self):
         return str(self.__dict__)
@@ -12,14 +12,17 @@ class DataBase(object):
         raise NotImplementedError()
 
     def data(self):
-        return tuple(self.__dict__['_'+col] for col in self.columns())
+        return tuple(self.__dict__[col] for col in self.columns())
+    
+    def data_dict(self):
+        return {col: self.__dict__[col] for col in self.columns()}
 
     def clone(self):
         return copy.copy(self)
     pass
 
 
-class DataTick(DataBase):
+class DataTick(DataRecord):
     @classmethod
     def columns(cls):
         return (
@@ -27,45 +30,40 @@ class DataTick(DataBase):
             'seq_num', 'ask_price', 'ask_size', 'bid_price', 'bid_size',
             'server_time')
 
-    def __init__(self, symbol, price, volume, total_volume, timestamp,
-                 seq_num, ask_price, ask_size, bid_price, bid_size,
-                 server_time):
-        self._symbol = symbol
-        self._price = price
-        self._volume = volume
-        self._total_volume = total_volume
-        self._timestamp = timestamp
-        self._seq_num = seq_num
-        self._ask_price = ask_price
-        self._ask_size = ask_size
-        self._bid_price = bid_price
-        self._bid_size = bid_size
-        self._server_time = server_time
+    def __init__(self, **kwargs):
+        for col in self.columns():
+            setattr(self, col, kwargs.get(col, None))
+            pass
         pass
 
+    @classmethod
+    def create_empty(cls, symbol):
+        return cls(symbol=symbol, price=None, volume=None, total_volume=None,
+                   timestamp=None, seq_num=None, ask_price=None,
+                   ask_size=None, bid_price=None, bid_size=None,
+                   server_time=None)
+        pass
     pass
 
 
-class DataBar(DataBase):
+class DataBar(DataRecord):
     @classmethod
     def columns(cls):
         return (
             'symbol', 'timestamp', 'period', 'first', 'last', 'high', 'low',
             'average', 'volume', 'total_volume')
 
-    def __init__(self, symbol, timestamp, period, first, last, high, low,
-                 average, volume,
-                 total_volume):
-        self._symbol = symbol
-        self._timestamp = timestamp
-        self._period = period
-        self._first = first
-        self._last = last
-        self._high = high
-        self._low = low
-        self._average = average
-        self._volume = volume
-        self._total_volume = total_volume
+    def __init__(self, **kwargs):
+        for col in self.columns():
+            setattr(self, col, kwargs.get(col, None))
+            pass
+        pass
+
+    @classmethod
+    def create_empty(cls, symbol, period):
+        return cls(symbol=symbol, timestamp=None, period=period, first=None,
+                   last=None, high=None, low=None, average=None, volume=None,
+                   total_volume=None)
         pass
     pass
 
