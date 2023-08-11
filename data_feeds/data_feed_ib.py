@@ -29,6 +29,7 @@ class DataFeedIB(DataFeedBase):
             self.client.run()
 
             self.client.disconnect()
+            time.sleep(1)
             pass
         pass
     

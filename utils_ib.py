@@ -51,7 +51,7 @@ def check_volume_valid(last_volume, volume):
 
 
 class IBWrapper(EWrapper):
-    def __init__(self, logger: logging.Logger = None):
+    def __init__(self, client: EClient, logger: logging.Logger = None):
         super().__init__()
         self.tick_buffer: Dict[int, DataTick] = dict()
         self.req_id = 10000
@@ -61,6 +61,8 @@ class IBWrapper(EWrapper):
         self.queue_msg_data: Dict[int, Tuple] = dict()
         self.seq_num = 0
         self.logger = logger
+        self.connect_event = threading.Event()
+        self.client = client
         pass
 
     @iswrapper
@@ -136,6 +138,17 @@ class IBWrapper(EWrapper):
             que.put(contractDetails)
             pass
         pass
+
+    @iswrapper
+    def connectAck(self):
+        super().connectAck()
+        self.connect_event.set()
+
+        for req_id, tick in self.tick_buffer.items():
+            contract = self.client.symbol2contract(tick.symbol)
+            self.client.reqMktData(req_id, contract, '', False, False, [])
+            pass
+        pass
         
     def set_on_tick(self, callback):
         self.on_tick = callback
@@ -189,7 +202,7 @@ class IBWrapper(EWrapper):
 class IBClient(EClient):
 
     def __init__(self,):
-        wrapper = IBWrapper()
+        wrapper = IBWrapper(self, )
         super().__init__(wrapper)
         self.is_close = True
         
@@ -239,7 +252,7 @@ class IBClient(EClient):
         pass
 
     def get_subscribed_symbols(self):
-        return [tick._symbol for _, tick in self.wrapper._tick_buffer.items()]
+        return [tick.symbol for _, tick in self.wrapper.tick_buffer.items()]
     
     def symbol2contract(self, symbol: str):
         if self.is_future(symbol):
@@ -270,6 +283,8 @@ class IBClient(EClient):
             return True
 
         return False
+    
+        pass
     pass
 
 
