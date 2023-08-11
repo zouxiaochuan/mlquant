@@ -1,5 +1,6 @@
 from typing import List
 import copy
+import pandas as pd
 
 
 class DataRecord(object):
@@ -75,7 +76,34 @@ class DataBar(DataRecord):
         return cls(symbol=symbol, timestamp=None, period=period, first=None,
                    last=None, high=None, low=None, average=None, volume=None,
                    total_volume=None)
-        pass
+    pass
+
+
+class DataBarSeq(DataBar):
+
+    def to_df(self, ) -> pd.DataFrame:
+        symbol = [self.symbol for _ in self.timestamp]
+        period = [self.period for _ in self.timestamp]
+
+        data_dict = dict()
+        for col in self.columns():
+            if col == 'symbol':
+                data_dict[col] = symbol
+            elif col == 'period':
+                data_dict[col] = period
+            else:
+                data_dict[col] = getattr(self, col)
+            pass
+
+        df = pd.DataFrame(data_dict)
+
+        return df
+
+    @classmethod
+    def create_empty(cls, symbol, period):
+        return cls(symbol=symbol, timestamp=[], period=period, first=[],
+                   last=[], high=[], low=[], average=[], volume=[],
+                   total_volume=[])
     pass
 
 
@@ -103,6 +131,8 @@ class DataManagerBase(object):
     def get_last_tick(self, symbol) -> DataTick:
         return self.cached_ticks.get(symbol)
 
+    def get_bars(self, symbol, period, start, end) -> DataBarSeq:
+        raise NotImplementedError()
     pass
 
 

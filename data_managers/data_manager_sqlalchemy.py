@@ -96,4 +96,24 @@ class DataManagerSQLAlchemy(base_classes.DataManagerBase):
             conn.execute(self.sql_insert_bar, [bar.data_dict() for bar in bars])
             conn.commit()
         pass
+
+    def get_bars(self, symbol, start, end, period) -> base_classes.DataBarSeq:
+        sql = text(
+            '''SELECT * FROM tb_bar WHERE symbol=:symbol AND period=:period AND timestamp>=:start AND timestamp<=:end''')
+        
+        seq = base_classes.DataBarSeq.create_empty(symbol, period)
+        cols = [c for c in base_classes.DataBar.columns() if c != 'symbol' and c != 'period']
+
+        with self.engine.begin() as conn:
+            bars = conn.execute(
+                sql, {'symbol': symbol, 'period': period, 'start': start, 'end': end}).fetchall()
+            
+            for bar in bars:
+                for col in cols:
+                    getattr(seq, col).append(getattr(bar, col))
+                    pass
+                pass
+            pass
+
+        return seq
     pass
