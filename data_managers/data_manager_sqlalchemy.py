@@ -7,7 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy import (
     Column, Integer, Text, DateTime, UniqueConstraint, REAL, text,
-    Index
+    Index, PrimaryKeyConstraint, BigInteger
 )
 
 DeclarativeBase = declarative_base()
@@ -16,12 +16,12 @@ DeclarativeBase = declarative_base()
 class Tick(DeclarativeBase):
     __tablename__ = 'tb_tick'
 
-    symbol = Column(Text, primary_key=True)
-    price = Column(REAL, nullable=True)
-    volume = Column(Integer, nullable=True)
-    total_volume = Column(Integer, nullable=True)
-    timestamp = Column(REAL, nullable=True)
-    seq_num = Column(Integer, nullable=True)
+    symbol = Column(Text)
+    price = Column(REAL)
+    volume = Column(Integer)
+    total_volume = Column(Integer)
+    timestamp = Column(BigInteger)
+    seq_num = Column(Integer)
     ask_price = Column(REAL, nullable=True)
     ask_size = Column(Integer, nullable=True)
     bid_price = Column(REAL, nullable=True)
@@ -30,6 +30,7 @@ class Tick(DeclarativeBase):
 
     __table_args__ = (
         Index('idx_tick_symbol_timestamp', symbol, timestamp.desc()),
+        PrimaryKeyConstraint(symbol, timestamp),
         {})
     pass
 
@@ -38,7 +39,7 @@ class Bar(DeclarativeBase):
     __tablename__ = 'tb_bar'
 
     symbol = Column(Text, primary_key=True)
-    timestamp = Column(REAL, primary_key=True)
+    timestamp = Column(BigInteger, primary_key=True)
     period = Column(Integer, primary_key=True)
     first = Column(REAL, nullable=True)
     last = Column(REAL, nullable=True)
@@ -65,14 +66,12 @@ class DataManagerSQLAlchemy(base_classes.DataManagerBase):
         tick_columns = base_classes.DataTick.columns()
         bar_columns = base_classes.DataBar.columns()
 
-        self.sql_insert_tick = '''
-        INSERT INTO table_tick({0}) VALUES({1})
-        '''.format(','.join(tick_columns),
-                   ','.join([f':{c}' for c in tick_columns]))
-        self.sql_insert_bar = '''
-        INSERT INTO table_bar({0}) VALUES({1})
-        '''.format(','.join(bar_columns),
-                   ','.join([f':{c}' for c in bar_columns]))
+        self.sql_insert_tick = text(
+            '''INSERT INTO tb_tick({0}) VALUES({1})'''.format(
+                ','.join(tick_columns), ','.join([f':{c}' for c in tick_columns])))
+        self.sql_insert_bar = text(
+            '''INSERT INTO tb_bar({0}) VALUES({1})'''.format(
+                ','.join(bar_columns), ','.join([f':{c}' for c in bar_columns])))
         pass
 
     def init_connection(self):

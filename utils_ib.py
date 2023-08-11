@@ -51,7 +51,7 @@ def check_volume_valid(last_volume, volume):
 
 
 class IBWrapper(EWrapper):
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger = None):
         super().__init__()
         self.tick_buffer: Dict[int, DataTick] = dict()
         self.req_id = 10000
@@ -91,21 +91,29 @@ class IBWrapper(EWrapper):
         if tickType == TickTypeEnum.VOLUME:
             tick_data = self.tick_buffer.get(reqId)
 
-            if not check_volume_valid(tick_data.total_volume, size):
-                self.logger.warning(
-                    f'volume is not valid, symbol: {tick_data.symbol} last: {tick_data.total_volume}, current: {size}')
-                pass
+            size = size * 100
             
-            if size > tick_data.total_volume:
-                # we should emit tick data
-                tick_data.volume = size - tick_data.total_volume
+            if not check_volume_valid(tick_data.total_volume, size):
+                # self.logger.warning(
+                #     f'volume is not valid, symbol: {tick_data.symbol} last: {tick_data.total_volume}, current: {size}')
+                return
+
+            if tick_data.total_volume is None:
                 tick_data.total_volume = size
-
-                if self.on_tick is not None:
-                    self.on_tick(tick_data)
-                    pass
                 pass
-
+            else:
+                if size > tick_data.total_volume:
+                    # we should emit tick data
+                    tick_data.volume = size - tick_data.total_volume
+                    tick_data.total_volume = size
+    
+                    if self.on_tick is not None and tick_data.price is not None:
+                        tick_data.timestamp = int(time.time()*1000)
+                        self.on_tick(tick_data)
+                        pass
+                    pass
+    
+                pass
             pass
         pass
     
@@ -183,7 +191,7 @@ class IBClient(EClient):
     def __init__(self,):
         wrapper = IBWrapper()
         super().__init__(wrapper)
-        self.is_close = False
+        self.is_close = True
         
         pass
 
@@ -193,10 +201,8 @@ class IBClient(EClient):
         self.disconnect()
         pass
 
-    def run(self):
-
+    def run(self, ):
         super().run()
-        
         pass
     
     def set_on_tick(self, callback):
@@ -242,8 +248,7 @@ class IBClient(EClient):
             contract.currency = 'USD'
             contract.secType = 'CONTFUT'
 
-            contractDetail = self.reqContractDetailsSync(
-                self.wrapper.get_req_id(), contract)
+            contractDetail = self.reqContractDetailsSync(contract)
             contract.secType = 'FUT'
             contract.exchange = contractDetail.contract.exchange
             contract.lastTradeDateOrContractMonth = \

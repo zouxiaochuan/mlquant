@@ -16,7 +16,7 @@ class BarMerger(object):
         pass
 
     def put_tick(self, tick: DataTick):
-        ts = tick._timestamp
+        ts = tick.timestamp
         last_ts = self._last_ts
 
         bars_list = []
@@ -43,9 +43,9 @@ class BarMerger(object):
                 pass
             pass
 
-        if tick._symbol is not None:
-            if tick._volume > 0:
-                self._buffers[0][tick._symbol].append(self.tick2bar(tick))
+        if tick.symbol is not None:
+            if tick.volume > 0:
+                self._buffers[0][tick.symbol].append(self.tick2bar(tick))
                 pass
 
             # triger event
@@ -60,22 +60,23 @@ class BarMerger(object):
         pass
 
     def tick2bar(self, tick: DataTick) -> DataBar:
-        return DataBar(tick._symbol, tick._timestamp, -1, tick._price,
-                       tick._price, tick._price, tick._price, tick._price,
-                       tick._volume, tick._total_volume)
+        return DataBar(tick.symbol, tick.timestamp, -1, tick.price,
+                       tick.price, tick.price, tick.price, tick.price,
+                       tick.volume, tick.total_volume)
 
     def merge_bars(self, timestamp, period, bars: List[DataBar]) -> DataBar:
         if len(bars) == 0:
             return None
 
-        symbol = bars[0]._symbol
-        first = bars[0]._first
-        last = bars[-1]._last
-        high = max(b._high for b in bars)
-        low = min(b._low for b in bars)
-        trade_money = sum(b._average * b._volume for b in bars)
-        volume = sum(b._volume for b in bars)
-        total_volume = bars[-1]._total_volume
+        # print([b.__dict__ for b in bars])
+        symbol = bars[0].symbol
+        first = bars[0].first
+        last = bars[-1].last
+        high = max(b.high for b in bars)
+        low = min(b.low for b in bars)
+        trade_money = sum(b.average * b.volume for b in bars)
+        volume = sum(b.volume for b in bars)
+        total_volume = bars[-1].total_volume
         average = trade_money / volume if volume > 0 else first
 
         return DataBar(symbol, timestamp, period, first, last, high, low,

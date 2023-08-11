@@ -30,9 +30,14 @@ class DataTick(DataRecord):
             'seq_num', 'ask_price', 'ask_size', 'bid_price', 'bid_size',
             'server_time')
 
-    def __init__(self, **kwargs):
-        for col in self.columns():
-            setattr(self, col, kwargs.get(col, None))
+    def __init__(self, *args, **kwargs):
+        cols = self.columns()
+        for i, v in enumerate(args):
+            setattr(self, cols[i], v)
+            pass
+
+        for k, v in kwargs.items():
+            setattr(self, k, v)
             pass
         pass
 
@@ -53,9 +58,15 @@ class DataBar(DataRecord):
             'symbol', 'timestamp', 'period', 'first', 'last', 'high', 'low',
             'average', 'volume', 'total_volume')
 
-    def __init__(self, **kwargs):
-        for col in self.columns():
-            setattr(self, col, kwargs.get(col, None))
+    def __init__(self, *args, **kwargs):
+        cols = self.columns()
+        
+        for i, v in enumerate(args):
+            setattr(self, cols[i], v)
+            pass
+
+        for k, v in kwargs.items():
+            setattr(self, k, v)
             pass
         pass
 
@@ -86,7 +97,7 @@ class DataManagerBase(object):
         raise NotImplementedError()
 
     def cache_tick(self, tick: DataTick):
-        self.cached_ticks[tick._symbol] = tick
+        self.cached_ticks[tick.symbol] = tick
         pass
 
     def get_last_tick(self, symbol) -> DataTick:

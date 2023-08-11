@@ -96,7 +96,8 @@ class IBWrapper(EWrapper):
 
     @iswrapper
     def contractDetails(self, reqId:int, contractDetails:ContractDetails):
-        print(contractDetails.__dict__)
+        # print(contractDetails.__dict__)
+        print(contractDetails.validExchanges)
         pass
     pass
 

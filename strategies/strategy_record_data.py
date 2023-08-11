@@ -5,28 +5,10 @@ from factors import factor_last_tick
 
 
 symbols = [
-    'CLmain',
-    'NGmain',
-#     'GCmain',
-    'UNG',
-    'UGAZ',
-    'DGAZ',
-    'USO',
-    'UCO',
-    'SCO',
-    'SPY',
-    'TVIX',
-    'TSLA',
-    'NUGT',
-    'DUST',
-    'AAPL',
-    'BA',
-    'UPRO',
-    'SPXU',
-    'NVDA',
-    'NTES',
-    'BILI',
-    'USL'
+    'BABA',
+    'PDD',
+    'BIDU',
+    'JD'
 ]
 
 

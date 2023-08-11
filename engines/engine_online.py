@@ -22,6 +22,7 @@ def unsubscribe_on_exit():
 
 
 def on_tick(tick: base_classes.DataTick):
+    # print('come here')
     engine_instance.on_datafeed_tick(tick)
     pass
 
@@ -91,7 +92,7 @@ class EngineOnline(base_classes.EngineBase):
         self._queue_datafeed.put(tick)
 
         with self._mutex:
-            self._last_tick_ts = tick._timestamp
+            self._last_tick_ts = tick.timestamp
             pass
         pass
 
@@ -104,7 +105,7 @@ class EngineOnline(base_classes.EngineBase):
         self._data_manager.cache_tick(tick)
 
         for i, strategy in enumerate(self._strategies):
-            if tick._symbol in strategy._symbols:
+            if tick.symbol in strategy._symbols:
                 strategy.on_tick(
                     tick, self._factor_manager.get_strategy_factor_values(i))
                 pass
@@ -112,10 +113,10 @@ class EngineOnline(base_classes.EngineBase):
         pass
 
     def on_bar(self, period: int, bars: List[base_classes.DataBar]):
-        for bar in bars:
-            print('{0},{1},{2}'.format(
-                time.time(), self._queue_datafeed.qsize(), str(bar)))
-            pass
+        # for bar in bars:
+        #     print('{0},{1},{2}'.format(
+        #         time.time(), self._queue_datafeed.qsize(), str(bar)))
+        #     pass
 
         self._data_manager.put_bars(bars)
 
@@ -135,8 +136,10 @@ class EngineOnline(base_classes.EngineBase):
 def generate_tick_second(engine: EngineOnline):
     while True:
         ts = int(time.time() * 1000)
-        tick = base_classes.DataTick(
-            None, None, None, None, ts, None, None, None, None, None, None)
+        # tick = base_classes.DataTick(
+        #     None, None, None, None, ts, None, None, None, None, None, None)
+        tick = base_classes.DataTick.create_empty(None)
+        tick.timestamp = ts
         engine._queue_datafeed.put(tick)
         time.sleep((1000 - ts % 1000 + 100)/1000)
         pass
