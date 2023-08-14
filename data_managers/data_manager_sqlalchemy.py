@@ -97,7 +97,7 @@ class DataManagerSQLAlchemy(base_classes.DataManagerBase):
             conn.commit()
         pass
 
-    def get_bars(self, symbol, start, end, period) -> base_classes.DataBarSeq:
+    def get_bars(self, symbol, period, start, end) -> base_classes.DataBarSeq:
         sql = text(
             '''SELECT * FROM tb_bar WHERE symbol=:symbol AND period=:period AND timestamp>=:start AND timestamp<=:end''')
         
@@ -115,5 +115,6 @@ class DataManagerSQLAlchemy(base_classes.DataManagerBase):
                 pass
             pass
 
+        print(len(seq.timestamp))
         return seq
     pass

@@ -11,12 +11,13 @@ def export(symbol: str, dt: str, output_dir: str):
     start = f'{dt} 09:30:00'
     end = f'{dt} 16:00:00'
 
-    start_date = datetime.strptime(start, '%Y-%m-%d %H:%M:%S').replace(tzinfo=eastern)
-    end_date = datetime.strptime(end, '%Y-%m-%d %H:%M:%S').replace(tzinfo=eastern)
+    start_date = eastern.localize(datetime.strptime(start, '%Y-%m-%d %H:%M:%S'))
+    end_date = eastern.localize(datetime.strptime(end, '%Y-%m-%d %H:%M:%S'))
 
-    start_ts = start_date.timestamp() * 1000
-    end_ts = end_date.timestamp() * 1000
+    start_ts = int(start_date.timestamp() * 1000)
+    end_ts = int(end_date.timestamp() * 1000)
 
+    print(f'start: {start_ts}, end: {end_ts}')
     data_manager = context.create_data_manager()
 
     bar_seq = data_manager.get_bars(symbol, 60000, start_ts, end_ts)

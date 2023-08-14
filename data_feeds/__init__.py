@@ -1,8 +1,8 @@
 import sys
 
 
-from data_feed_ib import DataFeedIB
-from data_feed_tiger import DataFeedTiger
+from .data_feed_ib import DataFeedIB
+from .data_feed_tiger import DataFeedTiger
 
 
 self_module = sys.modules[__name__]

@@ -1,7 +1,7 @@
 
 import sys
 
-from engine_online import EngineOnline
+from .engine_online import EngineOnline
 
 
 self_module = sys.modules[__name__]
