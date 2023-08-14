@@ -51,6 +51,7 @@ class Bar(DeclarativeBase):
 
     __table_args__ = (
         Index('idx_bar_symbol_timestamp', symbol, timestamp.desc()),
+        Index('idx_bar_symbol_period_timestamp', symbol, period, timestamp.desc()),
         {})
     pass
 

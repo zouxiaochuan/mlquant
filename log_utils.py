@@ -12,7 +12,6 @@ if not console.hasHandlers():
     console.addHandler(ch)
     pass
 
-
 def setLevel(level):
     console.setLevel(level)
 

@@ -15,6 +15,8 @@ from ibapi.ticktype import TickTypeEnum
 
 from base_classes import DataTick
 
+logger = logging.getLogger('mlquant')
+
 map_tick_type = {
     TickTypeEnum.BID_SIZE: 'bid_size',
     TickTypeEnum.BID: 'bid_price',
@@ -51,7 +53,7 @@ def check_volume_valid(last_volume, volume):
 
 
 class IBWrapper(EWrapper):
-    def __init__(self, client: EClient, logger: logging.Logger = None):
+    def __init__(self, client: EClient):
         super().__init__()
         self.tick_buffer: Dict[int, DataTick] = dict()
         self.req_id = 10000
@@ -60,7 +62,6 @@ class IBWrapper(EWrapper):
         self.queue_msg_req_id = Queue()
         self.queue_msg_data: Dict[int, Tuple] = dict()
         self.seq_num = 0
-        self.logger = logger
         self.connect_event = threading.Event()
         self.client = client
         pass
@@ -96,8 +97,8 @@ class IBWrapper(EWrapper):
             size = size * 100
             
             if not check_volume_valid(tick_data.total_volume, size):
-                # self.logger.warning(
-                #     f'volume is not valid, symbol: {tick_data.symbol} last: {tick_data.total_volume}, current: {size}')
+                logger.warning(
+                    f'volume is not valid, symbol: {tick_data.symbol} last: {tick_data.total_volume}, current: {size}')
                 return
 
             if tick_data.total_volume is None:
@@ -145,6 +146,7 @@ class IBWrapper(EWrapper):
         self.connect_event.set()
 
         for req_id, tick in self.tick_buffer.items():
+            logger.info(f'reconnect subscribe: {tick.symbol}')
             contract = self.client.symbol2contract(tick.symbol)
             self.client.reqMktData(req_id, contract, '', False, False, [])
             pass
@@ -201,8 +203,8 @@ class IBWrapper(EWrapper):
     
 class IBClient(EClient):
 
-    def __init__(self,):
-        wrapper = IBWrapper(self, )
+    def __init__(self, ):
+        wrapper = IBWrapper(self)
         super().__init__(wrapper)
         self.is_close = True
         

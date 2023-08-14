@@ -9,7 +9,7 @@ class Config(object):
         self.data_feed_class_name = 'DataFeedIB'
         self.data_feed_params = [10001]
         self.engine_class_name = 'EngineOnline'
-        self.engine_params = []
+        self.engine_params = ['./strategies']
 
         if os.path.exists('config.json'):
             with open('config.json') as fin:
