@@ -9,6 +9,9 @@ import pickle
 import sys
 import inspect
 import importlib
+import logging
+
+logger = logging.getLogger('mlquant')
 
 
 def get_temp_name(prefix='temp'):
@@ -26,6 +29,7 @@ def file2list(filename):
 
 
 def import_path_and_get_classes(path):
+    logger.info(f'import class : {path}')
     if path not in sys.path:
         sys.path.append(path)
         pass

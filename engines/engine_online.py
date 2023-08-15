@@ -7,6 +7,7 @@ import atexit
 from typing import List
 import time
 import datetime
+import logging
 
 import base_classes
 import utils_common
@@ -15,6 +16,7 @@ import factor_manager
 
 engine_instance = None
 
+logger = logging.getLogger('mlquant')
 
 def unsubscribe_on_exit():
     engine_instance.unsubscribe()
@@ -58,6 +60,7 @@ class EngineOnline(base_classes.EngineBase):
         pass
 
     def load_strategies(self, pathes: list):
+        logger.info(f'load strategies from {pathes}')
         strategies = list()
 
         for path in pathes:
