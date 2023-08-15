@@ -106,16 +106,19 @@ class IBWrapper(EWrapper):
                 pass
             else:
                 if size > tick_data.total_volume:
-                    # we should emit tick data
-                    tick_data.volume = size - tick_data.total_volume
-                    tick_data.total_volume = size
-    
-                    if self.on_tick is not None and tick_data.price is not None:
-                        tick_data.timestamp = int(time.time()*1000)
-                        self.on_tick(tick_data)
+                    current_ts = int(time.time()*1000)
+                    if current_ts > tick_data.timestamp:
+                        # we should emit tick data
+                        tick_data.volume = size - tick_data.total_volume
+                        tick_data.total_volume = size
+        
+                        if self.on_tick is not None and tick_data.price is not None:
+                            tick_data.timestamp = current_ts
+                            self.on_tick(tick_data)
+                            pass
                         pass
+                    tick_data.timestamp = current_ts
                     pass
-    
                 pass
             pass
         pass
