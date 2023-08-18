@@ -46,8 +46,8 @@ def check_volume_valid(last_volume, volume):
     if volume / last_volume > 5:
         return False
     
-    if volume < last_volume:
-        return False
+    # if volume < last_volume:
+    #     return False
     
     return True
 
@@ -103,6 +103,11 @@ class IBWrapper(EWrapper):
                 return
 
             if tick_data.total_volume is None:
+                tick_data.total_volume = size
+                pass
+            elif tick_data.total_volume > size:
+                # volume reset
+                logger.warning(f'volume reset, symbol: {tick_data.symbol}, old: {tick_data.total_volume}, new: {size}')
                 tick_data.total_volume = size
                 pass
             else:
