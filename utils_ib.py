@@ -100,6 +100,7 @@ class IBWrapper(EWrapper):
             if not check_volume_valid(tick_data.total_volume, size):
                 logger.warning(
                     f'volume is not valid, symbol: {tick_data.symbol} last: {tick_data.total_volume}, current: {size}')
+                tick_data.total_volume = size
                 return
 
             if tick_data.total_volume is None:
