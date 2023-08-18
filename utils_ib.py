@@ -95,6 +95,7 @@ class IBWrapper(EWrapper):
             tick_data = self.tick_buffer.get(reqId)
 
             size = size * 100
+            current_ts = int(time.time()*1000)
             
             if not check_volume_valid(tick_data.total_volume, size):
                 logger.warning(
@@ -106,7 +107,6 @@ class IBWrapper(EWrapper):
                 pass
             else:
                 if size > tick_data.total_volume:
-                    current_ts = int(time.time()*1000)
                     if current_ts > tick_data.timestamp:
                         # we should emit tick data
                         tick_data.volume = size - tick_data.total_volume
@@ -117,9 +117,9 @@ class IBWrapper(EWrapper):
                             self.on_tick(tick_data)
                             pass
                         pass
-                    tick_data.timestamp = current_ts
                     pass
                 pass
+            tick_data.timestamp = current_ts
             pass
         pass
     
@@ -152,6 +152,9 @@ class IBWrapper(EWrapper):
             logger.info(f'reconnect subscribe: {tick.symbol}')
             contract = self.client.symbol2contract(tick.symbol)
             self.client.reqMktData(req_id, contract, '', False, False, [])
+            tick.total_volume = None
+            tick.price = None
+            tick.timestamp = None
             pass
         pass
         
